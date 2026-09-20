@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // User profile and roles
+    match /users/{userId} {
+      allow read, write: if request.auth != null;
+    }
+    // Emergency Medical Profiles (Read allowed for emergency break-glass triage)
+    match /patients/{patientId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    // Access audit logging
+    match /audit_logs/{logId} {
+      allow create: if true;
+      allow read: if request.auth != null;
+    }
+  }
+}

@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #0284c7;
+  --primary-dark: #006194;
+  --secondary: #0f172a;
+  --surface: #f8fafc;
+  --surface-card: #ffffff;
+  --border-hairline: #e2e8f0;
+  --alert-red: #dc2626;
+  --alert-red-bg: #fef2f2;
+  --alert-red-border: #f87171;
+  --alert-amber: #d97706;
+  --alert-amber-bg: #fffbeb;
+  --alert-emerald: #059669;
+  --alert-emerald-bg: #ecfdf5;
+}
+
+body {
+  background-color: var(--surface);
+  color: var(--secondary);
+  font-family: var(--font-geist-sans), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tabular figures for medical vitals & telemetry alignment */
+.tnum, .vital-metric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Medical Emergency Red Alert Glow */
+.emergency-red-glow {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+/* Subtle hairline borders */
+.border-hairline {
+  border: 1px solid #e2e8f0;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
