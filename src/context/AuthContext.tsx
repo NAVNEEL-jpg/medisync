@@ -72,7 +72,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Demo users when testing offline or for 1-click clinical testing
 const DEMO_USERS: Record<UserRole, AppUser> = {
   DOCTOR: {
     uid: 'demo-doc-01',
@@ -107,6 +106,45 @@ const DEMO_USERS: Record<UserRole, AppUser> = {
     authProvider: 'demo',
   },
 };
+
+export interface RegisteredAccount {
+  uid: string;
+  email: string;
+  password: string;
+  displayName: string;
+  role: UserRole;
+  aadhaarNumber?: string;
+  phoneNumber?: string;
+  bloodGroup?: string;
+  licenseNumber?: string;
+  hospital?: string;
+  orgType?: string;
+}
+
+const REGISTERED_ACCOUNTS_KEY = 'medisync_registered_accounts';
+export const DEMO_PASSWORDS = ['demo123', 'Demo@123', 'password123', 'MediSync@2026', 'admin123'];
+
+export function getRegisteredAccounts(): RegisteredAccount[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(REGISTERED_ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveRegisteredAccount(account: RegisteredAccount) {
+  if (typeof window === 'undefined') return;
+  try {
+    const existing = getRegisteredAccounts();
+    const filtered = existing.filter((a) => a.email.toLowerCase() !== account.email.toLowerCase());
+    filtered.push(account);
+    localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(filtered));
+  } catch (e) {
+    console.warn('Could not persist registered account:', e);
+  }
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Synchronous zero-latency session recovery from localStorage
@@ -208,59 +246,117 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, pass: string) => {
-    if (isFirebaseConfigured && auth) {
-      const cred = await signInWithEmailAndPassword(auth, email, pass);
-      const activeUser: AppUser = {
-        uid: cred.user.uid,
-        email: cred.user.email || email,
-        displayName: cred.user.displayName || email.split('@')[0],
-        role: 'PATIENT',
-        authProvider: 'password',
-      };
-      setUser(activeUser);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('medicync_auth_user', JSON.stringify(activeUser));
-      }
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = pass.trim();
 
-      // Background Firestore role & metadata fetch
-      if (db) {
-        (async () => {
-          try {
-            const userDocRef = doc(db, 'users', cred.user.uid);
-            const userSnap = await Promise.race([
-              getDoc(userDocRef),
-              new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
-            ]);
-            if (userSnap && userSnap.exists()) {
-              const data = userSnap.data();
-              const updated: AppUser = {
-                ...activeUser,
-                role: data.role || 'PATIENT',
-                displayName: data.displayName || activeUser.displayName,
-                ...data,
-              };
-              setUser(updated);
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('medicync_auth_user', JSON.stringify(updated));
+    if (isFirebaseConfigured && auth) {
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        const activeUser: AppUser = {
+          uid: cred.user.uid,
+          email: cred.user.email || email,
+          displayName: cred.user.displayName || email.split('@')[0],
+          role: 'PATIENT',
+          authProvider: 'password',
+        };
+        setUser(activeUser);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('medicync_auth_user', JSON.stringify(activeUser));
+        }
+
+        // Background Firestore role & metadata fetch
+        if (db) {
+          (async () => {
+            try {
+              const userDocRef = doc(db, 'users', cred.user.uid);
+              const userSnap = await Promise.race([
+                getDoc(userDocRef),
+                new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+              ]);
+              if (userSnap && userSnap.exists()) {
+                const data = userSnap.data();
+                const updated: AppUser = {
+                  ...activeUser,
+                  role: data.role || 'PATIENT',
+                  displayName: data.displayName || activeUser.displayName,
+                  ...data,
+                };
+                setUser(updated);
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('medicync_auth_user', JSON.stringify(updated));
+                }
               }
+            } catch (e) {
+              console.warn('Background Firestore user sync error:', e);
             }
-          } catch (e) {
-            console.warn('Background Firestore user sync error:', e);
-          }
-        })();
+          })();
+        }
+      } catch (err: any) {
+        const code = err?.code || '';
+        const msg = err?.message || String(err);
+        const registered = getRegisteredAccounts();
+        const accountExists =
+          registered.some((a) => a.email.toLowerCase() === cleanEmail) ||
+          Object.values(DEMO_USERS).some((d) => d.email.toLowerCase() === cleanEmail);
+
+        if (code === 'auth/user-not-found' || (!accountExists && (code === 'auth/invalid-credential' || msg.includes('invalid-credential')))) {
+          const notFoundError = new Error(`No account exists for ${email}. Please sign up first.`);
+          (notFoundError as any).code = 'auth/user-not-found';
+          throw notFoundError;
+        }
+
+        const invalidCredError = new Error('Invalid email or password. Access denied.');
+        (invalidCredError as any).code = 'auth/wrong-password';
+        throw invalidCredError;
       }
     } else {
-      const matched = Object.values(DEMO_USERS).find((u) => u.email.toLowerCase() === email.toLowerCase());
-      const loggedUser = matched || {
-        uid: `user-${Date.now()}`,
-        email,
-        displayName: email.split('@')[0],
-        role: 'PATIENT',
-        authProvider: 'password' as const,
-      };
-      setUser(loggedUser);
+      // Local / Offline authentication mode
+      const registered = getRegisteredAccounts();
+      const localAcc = registered.find((a) => a.email.toLowerCase() === cleanEmail);
+      const demoAcc = Object.values(DEMO_USERS).find((u) => u.email.toLowerCase() === cleanEmail);
+
+      // 1. Check if email exists at all
+      if (!localAcc && !demoAcc) {
+        const notFoundError = new Error(`No account exists for ${email}. Please sign up first.`);
+        (notFoundError as any).code = 'auth/user-not-found';
+        throw notFoundError;
+      }
+
+      // 2. Email exists -> Verify password
+      let isPasswordCorrect = false;
+      let appUser: AppUser;
+
+      if (localAcc) {
+        isPasswordCorrect = localAcc.password === cleanPass;
+        appUser = {
+          uid: localAcc.uid,
+          email: localAcc.email,
+          displayName: localAcc.displayName,
+          role: localAcc.role,
+          aadhaarNumber: localAcc.aadhaarNumber,
+          phoneNumber: localAcc.phoneNumber,
+          bloodGroup: localAcc.bloodGroup,
+          licenseNumber: localAcc.licenseNumber,
+          hospital: localAcc.hospital,
+          orgType: localAcc.orgType,
+          authProvider: 'password',
+        };
+      } else {
+        // demoAcc
+        isPasswordCorrect = DEMO_PASSWORDS.includes(cleanPass);
+        appUser = { ...demoAcc!, authProvider: 'password' };
+      }
+
+      if (!isPasswordCorrect) {
+        const invalidCredError = new Error('Invalid email or password. Access denied.');
+        (invalidCredError as any).code = 'auth/wrong-password';
+        throw invalidCredError;
+      }
+
+      // Password matches -> Set user session
+      setUser(appUser);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('medicync_auth_user', JSON.stringify(loggedUser));
+        localStorage.setItem('medicync_auth_user', JSON.stringify(appUser));
       }
     }
   };
@@ -427,6 +523,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     role: UserRole,
     extra?: Record<string, string>
   ) => {
+    const cleanEmail = email.trim().toLowerCase();
+    const registered = getRegisteredAccounts();
+    const isAlreadyRegistered =
+      registered.some((a) => a.email.toLowerCase() === cleanEmail) ||
+      Object.values(DEMO_USERS).some((d) => d.email.toLowerCase() === cleanEmail);
+
+    if (isAlreadyRegistered) {
+      const existsErr = new Error(`An account with email ${email} is already registered. Please sign in.`);
+      (existsErr as any).code = 'auth/email-already-in-use';
+      throw existsErr;
+    }
+
     if (isFirebaseConfigured && auth) {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       const appUser: AppUser = {
@@ -437,6 +545,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...extra,
       };
 
+      saveRegisteredAccount({
+        uid: cred.user.uid,
+        email,
+        password: pass,
+        displayName: name,
+        role,
+        ...extra,
+      });
+
       setUser(appUser);
       if (typeof window !== 'undefined') {
         localStorage.setItem('medicync_auth_user', JSON.stringify(appUser));
@@ -446,13 +563,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setDoc(doc(db, 'users', cred.user.uid), appUser).catch(() => {});
       }
     } else {
+      const newUid = `user-${Date.now()}`;
       const appUser: AppUser = {
-        uid: `user-${Date.now()}`,
+        uid: newUid,
         email,
         displayName: name,
         role,
         ...extra,
       };
+
+      saveRegisteredAccount({
+        uid: newUid,
+        email,
+        password: pass,
+        displayName: name,
+        role,
+        ...extra,
+      });
+
       setUser(appUser);
       if (typeof window !== 'undefined') {
         localStorage.setItem('medicync_auth_user', JSON.stringify(appUser));
@@ -461,7 +589,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUpCitizen = async (data: CitizenSignUpData) => {
+    const cleanEmail = data.email.trim().toLowerCase();
     const password = data.password || 'MediSync@2026';
+
+    const registered = getRegisteredAccounts();
+    const isAlreadyRegistered =
+      registered.some((a) => a.email.toLowerCase() === cleanEmail) ||
+      Object.values(DEMO_USERS).some((d) => d.email.toLowerCase() === cleanEmail);
+
+    if (isAlreadyRegistered) {
+      const existsErr = new Error(`An account with email ${data.email} is already registered. Please sign in.`);
+      (existsErr as any).code = 'auth/email-already-in-use';
+      throw existsErr;
+    }
+
     if (isFirebaseConfigured && auth) {
       const cred = await createUserWithEmailAndPassword(auth, data.email, password);
       const citizenUser: AppUser = {
@@ -474,6 +615,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         bloodGroup: data.bloodGroup || 'O+',
         authProvider: 'password',
       };
+
+      saveRegisteredAccount({
+        uid: cred.user.uid,
+        email: data.email,
+        password,
+        displayName: data.name,
+        role: 'PATIENT',
+        aadhaarNumber: data.aadhaarNumber,
+        phoneNumber: data.phoneNumber,
+        bloodGroup: data.bloodGroup || 'O+',
+      });
 
       // Set user immediately so dashboard opens without delay
       setUser(citizenUser);
@@ -504,8 +656,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })();
       }
     } else {
+      const newUid = `cit-${Date.now()}`;
       const citizenUser: AppUser = {
-        uid: `cit-${Date.now()}`,
+        uid: newUid,
         email: data.email,
         displayName: data.name,
         role: 'PATIENT',
@@ -514,6 +667,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         bloodGroup: data.bloodGroup || 'O+',
         authProvider: 'password',
       };
+
+      saveRegisteredAccount({
+        uid: newUid,
+        email: data.email,
+        password,
+        displayName: data.name,
+        role: 'PATIENT',
+        aadhaarNumber: data.aadhaarNumber,
+        phoneNumber: data.phoneNumber,
+        bloodGroup: data.bloodGroup || 'O+',
+      });
+
       setUser(citizenUser);
       if (typeof window !== 'undefined') {
         localStorage.setItem('medicync_auth_user', JSON.stringify(citizenUser));
@@ -522,6 +687,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUpOrganisation = async (data: OrgSignUpData) => {
+    const cleanEmail = data.email.trim().toLowerCase();
+
+    const registered = getRegisteredAccounts();
+    const isAlreadyRegistered =
+      registered.some((a) => a.email.toLowerCase() === cleanEmail) ||
+      Object.values(DEMO_USERS).some((d) => d.email.toLowerCase() === cleanEmail);
+
+    if (isAlreadyRegistered) {
+      const existsErr = new Error(`An account with email ${data.email} is already registered. Please sign in.`);
+      (existsErr as any).code = 'auth/email-already-in-use';
+      throw existsErr;
+    }
+
     if (isFirebaseConfigured && auth) {
       const cred = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const orgUser: AppUser = {
@@ -535,6 +713,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         phoneNumber: data.phoneNumber,
         authProvider: 'password',
       };
+
+      saveRegisteredAccount({
+        uid: cred.user.uid,
+        email: data.email,
+        password: data.password,
+        displayName: `${data.officerName} (${data.orgName})`,
+        role: 'DOCTOR',
+        hospital: data.orgName,
+        licenseNumber: data.licenseNumber,
+        orgType: data.orgType,
+        phoneNumber: data.phoneNumber,
+      });
 
       // Set user immediately
       setUser(orgUser);
@@ -563,8 +753,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })();
       }
     } else {
+      const newUid = `org-${Date.now()}`;
       const orgUser: AppUser = {
-        uid: `org-${Date.now()}`,
+        uid: newUid,
         email: data.email,
         displayName: `${data.officerName} (${data.orgName})`,
         role: 'DOCTOR',
@@ -574,6 +765,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         phoneNumber: data.phoneNumber,
         authProvider: 'password',
       };
+
+      saveRegisteredAccount({
+        uid: newUid,
+        email: data.email,
+        password: data.password,
+        displayName: `${data.officerName} (${data.orgName})`,
+        role: 'DOCTOR',
+        hospital: data.orgName,
+        licenseNumber: data.licenseNumber,
+        orgType: data.orgType,
+        phoneNumber: data.phoneNumber,
+      });
+
       setUser(orgUser);
       if (typeof window !== 'undefined') {
         localStorage.setItem('medicync_auth_user', JSON.stringify(orgUser));

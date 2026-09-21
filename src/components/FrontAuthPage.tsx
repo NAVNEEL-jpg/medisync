@@ -49,25 +49,38 @@ function parseAuthError(err: unknown): ParsedAuthError {
       type: 'unauthorized_domain',
     };
   }
-  if (code === 'auth/email-already-in-use' || msg.includes('email-already-in-use')) {
+  if (code === 'auth/email-already-in-use' || msg.includes('email-already-in-use') || msg.toLowerCase().includes('already registered')) {
     return {
       title: 'Account Already Exists',
-      message: 'An account with this email is already registered. Please switch to "Sign in" instead of registering.',
+      message: 'An account with this email is already registered. Shifted to Sign in.',
       type: 'email_in_use',
     };
   }
-  if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || msg.includes('invalid-credential') || msg.includes('wrong-password')) {
-    return {
-      title: 'Invalid Credentials',
-      message: 'The email or password entered is incorrect. Please check your credentials or use Quick Demo login.',
-      type: 'invalid_credential',
-    };
-  }
-  if (code === 'auth/user-not-found' || msg.includes('user-not-found')) {
+  if (
+    code === 'auth/user-not-found' ||
+    msg.includes('user-not-found') ||
+    msg.toLowerCase().includes('no account exists') ||
+    msg.toLowerCase().includes('create an account first') ||
+    msg.toLowerCase().includes('please sign up first')
+  ) {
     return {
       title: 'No Account Found',
-      message: 'No account exists for this email. Please switch to "Create account" to register.',
+      message: 'No account exists for this email. Shifted to Create account.',
       type: 'user_not_found',
+    };
+  }
+  if (
+    code === 'auth/invalid-credential' ||
+    code === 'auth/wrong-password' ||
+    msg.includes('invalid-credential') ||
+    msg.includes('wrong-password') ||
+    msg.toLowerCase().includes('invalid email or password') ||
+    msg.toLowerCase().includes('access denied')
+  ) {
+    return {
+      title: 'Invalid Email or Password',
+      message: 'The email or password entered is incorrect. Access denied.',
+      type: 'invalid_credential',
     };
   }
   return {
@@ -95,6 +108,10 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<ParsedAuthError | null>(null);
+  const [authNotice, setAuthNotice] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
   const [isEmailSubmitting, setIsEmailSubmitting] = useState(false);
   const [isOrgSubmitting, setIsOrgSubmitting] = useState(false);
   const isAnySubmitting = isEmailSubmitting || isOrgSubmitting;
@@ -140,17 +157,36 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
   const handleCitizenSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
+    setAuthNotice(null);
     setIsEmailSubmitting(true);
     try {
       if (authMode === 'login') {
         await signIn(email, password);
+        onEnterDashboard?.('PATIENT');
       } else {
         validateAadhaarAndPhone();
         await signUpCitizen({ name: citizenName, aadhaarNumber, phoneNumber, email, password, bloodGroup });
+        onEnterDashboard?.('PATIENT');
       }
-      onEnterDashboard?.('PATIENT');
     } catch (err: unknown) {
-      setAuthError(parseAuthError(err));
+      const parsed = parseAuthError(err);
+      if (parsed.type === 'user_not_found') {
+        setAuthMode('signup');
+        setAuthNotice({
+          title: 'No Account Found — Switched to Sign Up',
+          message: `No account exists for ${email}. Please complete registration below to create your medical vault.`,
+        });
+        setAuthError(null);
+      } else if (parsed.type === 'email_in_use') {
+        setAuthMode('login');
+        setAuthNotice({
+          title: 'Account Already Exists — Switched to Sign In',
+          message: `An account for ${email} is already registered. Please enter your password to sign in.`,
+        });
+        setAuthError(null);
+      } else {
+        setAuthError(parsed);
+      }
     } finally {
       setIsEmailSubmitting(false);
     }
@@ -159,16 +195,35 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
   const handleOrgSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
+    setAuthNotice(null);
     setIsOrgSubmitting(true);
     try {
       if (authMode === 'login') {
         await signIn(email, password);
+        onEnterDashboard?.('DOCTOR');
       } else {
         await signUpOrganisation({ orgName, licenseNumber, officerName, orgType, phoneNumber: orgPhone, email, password });
+        onEnterDashboard?.('DOCTOR');
       }
-      onEnterDashboard?.('DOCTOR');
     } catch (err: unknown) {
-      setAuthError(parseAuthError(err));
+      const parsed = parseAuthError(err);
+      if (parsed.type === 'user_not_found') {
+        setAuthMode('signup');
+        setAuthNotice({
+          title: 'Facility Not Found — Switched to Registration',
+          message: `No account exists for ${email}. Please register your hospital/clinic node below.`,
+        });
+        setAuthError(null);
+      } else if (parsed.type === 'email_in_use') {
+        setAuthMode('login');
+        setAuthNotice({
+          title: 'Facility Already Registered — Switched to Sign In',
+          message: `An account for ${email} is already registered. Please enter your password to sign in.`,
+        });
+        setAuthError(null);
+      } else {
+        setAuthError(parsed);
+      }
     } finally {
       setIsOrgSubmitting(false);
     }
@@ -343,7 +398,11 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                 { id: 'signup', label: 'Create account' },
               ]}
               activeTab={authMode}
-              onTabChange={(id) => { setAuthMode(id as 'login' | 'signup'); setAuthError(null); }}
+              onTabChange={(id) => {
+                setAuthMode(id as 'login' | 'signup');
+                setAuthError(null);
+                setAuthNotice(null);
+              }}
               className="mb-3.5 sm:mb-5"
             />
 
@@ -351,7 +410,7 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
             <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-3.5 sm:mb-5">
               <DarkCard
                 selected={authRole === 'citizen'}
-                onClick={() => { setAuthRole('citizen'); setAuthError(null); }}
+                onClick={() => { setAuthRole('citizen'); setAuthError(null); setAuthNotice(null); }}
                 className="p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3"
                 interactive
               >
@@ -368,7 +427,7 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
 
               <DarkCard
                 selected={authRole === 'organisation'}
-                onClick={() => { setAuthRole('organisation'); setAuthError(null); }}
+                onClick={() => { setAuthRole('organisation'); setAuthError(null); setAuthNotice(null); }}
                 className="p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3"
                 interactive
               >
@@ -384,78 +443,39 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
               </DarkCard>
             </div>
 
-            {/* Error Display with Smart Action Buttons */}
+            {/* Automatic Mode Shift Notification Banner */}
+            {authNotice && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="mb-4 p-3.5 rounded-xl bg-cyan-500/15 border border-cyan-400/30 text-cyan-200 text-[12px] sm:text-[13px] space-y-1 animate-fadeInUp font-body shadow-lg shadow-cyan-500/5"
+              >
+                <div className="flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-lg bg-cyan-400/20 text-cyan-300 flex items-center justify-center shrink-0 mt-0.5">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-cyan-300 leading-tight">{authNotice.title}</p>
+                    <p className="text-cyan-100/90 text-[11.5px] sm:text-[12px] mt-0.5 leading-snug">{authNotice.message}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error Display */}
             {authError && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/15 border border-red-500/40 text-red-200 text-[12px] sm:text-[13px] space-y-2 animate-fadeInUp font-body">
-                <div className="flex items-start gap-2">
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="mb-4 p-3.5 rounded-xl bg-red-500/15 border border-red-500/40 text-red-200 text-[12px] sm:text-[13px] space-y-1 animate-fadeInUp font-body shadow-lg shadow-red-500/5"
+              >
+                <div className="flex items-start gap-2.5">
                   <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-red-300 leading-tight">{authError.title}</p>
+                    <p className="font-bold text-red-300 leading-tight">{authError.title}</p>
                     <p className="text-red-200/90 text-[11px] sm:text-[12px] mt-1 leading-snug">{authError.message}</p>
                   </div>
                 </div>
-
-                {authError.type === 'unauthorized_domain' && (
-                  <div className="pt-2 border-t border-red-500/20 space-y-1.5">
-                    <p className="text-[11px] text-red-300 font-medium">
-                      Immediate bypass for testing on this device:
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-1.5">
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          quickLoginAs('PATIENT');
-                          onEnterDashboard?.('PATIENT');
-                        }}
-                        className="!bg-cyan-500 hover:!bg-cyan-600 !text-white text-xs font-semibold w-full justify-center"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 mr-1" />
-                        Enter Demo Citizen Vault
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          quickLoginAs('DOCTOR');
-                          onEnterDashboard?.('DOCTOR');
-                        }}
-                        className="!bg-slate-700 hover:!bg-slate-600 !text-white text-xs font-semibold w-full justify-center"
-                      >
-                        <Stethoscope className="w-3.5 h-3.5 mr-1" />
-                        Enter Demo Doctor View
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {authError.type === 'email_in_use' && (
-                  <div className="pt-1.5 border-t border-red-500/20">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthMode('login');
-                        setAuthError(null);
-                      }}
-                      className="text-[12px] text-cyan-300 hover:text-cyan-200 underline font-semibold cursor-pointer"
-                    >
-                      Switch to Sign in with this email →
-                    </button>
-                  </div>
-                )}
-
-                {authError.type === 'user_not_found' && (
-                  <div className="pt-1.5 border-t border-red-500/20">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthMode('signup');
-                        setAuthError(null);
-                      }}
-                      className="text-[12px] text-cyan-300 hover:text-cyan-200 underline font-semibold cursor-pointer"
-                    >
-                      Create account with this email →
-                    </button>
-                  </div>
-                )}
               </div>
             )}
 
@@ -478,7 +498,10 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                     <DarkInput
                       label="Full legal name"
                       value={citizenName}
-                      onChange={(e) => setCitizenName(e.target.value)}
+                      onChange={(e) => {
+                        setCitizenName(e.target.value);
+                        if (authError) setAuthError(null);
+                      }}
                       icon={<User className="w-4 h-4" />}
                       required
                     />
@@ -486,7 +509,10 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                     <DarkInput
                       label="Aadhaar number (12 digits)"
                       value={aadhaarNumber}
-                      onChange={handleAadhaarChange}
+                      onChange={(e) => {
+                        handleAadhaarChange(e);
+                        if (authError) setAuthError(null);
+                      }}
                       icon={<Fingerprint className="w-4 h-4" />}
                       maxLength={14}
                       state={isAadhaarComplete ? 'success' : 'default'}
@@ -498,7 +524,10 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                       <DarkInput
                         label="Mobile (+91)"
                         value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        onChange={(e) => {
+                          setPhoneNumber(e.target.value);
+                          if (authError) setAuthError(null);
+                        }}
                         icon={<Phone className="w-3.5 h-3.5" />}
                         type="tel"
                         state={isPhoneValid ? 'success' : 'default'}
@@ -522,7 +551,11 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                       label="Email address"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (authError) setAuthError(null);
+                        if (authNotice) setAuthNotice(null);
+                      }}
                       icon={<Mail className="w-3.5 h-3.5" />}
                       required
                     />
@@ -531,7 +564,11 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                       label="Password"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (authError) setAuthError(null);
+                        if (authNotice) setAuthNotice(null);
+                      }}
                       icon={<Lock className="w-3.5 h-3.5" />}
                       rightAction={
                         <button
@@ -565,16 +602,27 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                         label="Email address"
                         type="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (authError) setAuthError(null);
+                          if (authNotice) setAuthNotice(null);
+                        }}
                         icon={<Mail className="w-3.5 h-3.5" />}
+                        state={authError?.type === 'invalid_credential' ? 'error' : 'default'}
                         required
                       />
                       <DarkInput
                         label="Password"
                         type={showPassword ? 'text' : 'password'}
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          if (authError) setAuthError(null);
+                          if (authNotice) setAuthNotice(null);
+                        }}
                         icon={<Lock className="w-3.5 h-3.5" />}
+                        state={authError?.type === 'invalid_credential' ? 'error' : 'default'}
+                        errorText={authError?.type === 'invalid_credential' ? 'Invalid email or password. Access denied.' : undefined}
                         rightAction={
                           <button
                             type="button"
@@ -630,23 +678,29 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
             {authRole === 'organisation' && (
               <div className="space-y-4">
                 <form onSubmit={handleOrgSubmit} className="space-y-3">
-                  <DarkInput
-                    label="Hospital / nursing home name"
-                    value={orgName}
-                    onChange={(e) => setOrgName(e.target.value)}
-                    icon={<Building2 className="w-4 h-4" />}
-                    required
-                  />
-                  <DarkInput
-                    label="Medical license or camp ID"
-                    value={licenseNumber}
-                    onChange={(e) => setLicenseNumber(e.target.value)}
-                    icon={<Stethoscope className="w-4 h-4" />}
-                    required
-                  />
-
                   {authMode === 'signup' && (
                     <>
+                      <DarkInput
+                        label="Hospital / nursing home name"
+                        value={orgName}
+                        onChange={(e) => {
+                          setOrgName(e.target.value);
+                          if (authError) setAuthError(null);
+                        }}
+                        icon={<Building2 className="w-4 h-4" />}
+                        required
+                      />
+                      <DarkInput
+                        label="Medical license or camp ID"
+                        value={licenseNumber}
+                        onChange={(e) => {
+                          setLicenseNumber(e.target.value);
+                          if (authError) setAuthError(null);
+                        }}
+                        icon={<Stethoscope className="w-4 h-4" />}
+                        required
+                      />
+
                       <div className="grid grid-cols-2 gap-2.5">
                         <div>
                           <label className="block text-[11px] font-medium text-slate-400 mb-1.5 pl-1">Organisation type</label>
@@ -665,14 +719,20 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                           label="Contact phone"
                           type="tel"
                           value={orgPhone}
-                          onChange={(e) => setOrgPhone(e.target.value)}
+                          onChange={(e) => {
+                            setOrgPhone(e.target.value);
+                            if (authError) setAuthError(null);
+                          }}
                           icon={<Phone className="w-3.5 h-3.5" />}
                         />
                       </div>
                       <DarkInput
                         label="Authorized officer name"
                         value={officerName}
-                        onChange={(e) => setOfficerName(e.target.value)}
+                        onChange={(e) => {
+                          setOfficerName(e.target.value);
+                          if (authError) setAuthError(null);
+                        }}
                         icon={<User className="w-4 h-4" />}
                         required
                       />
@@ -683,16 +743,27 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                     label="Official email address"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (authError) setAuthError(null);
+                      if (authNotice) setAuthNotice(null);
+                    }}
                     icon={<Mail className="w-3.5 h-3.5" />}
+                    state={authError?.type === 'invalid_credential' ? 'error' : 'default'}
                     required
                   />
                   <DarkInput
                     label="Password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (authError) setAuthError(null);
+                      if (authNotice) setAuthNotice(null);
+                    }}
                     icon={<Lock className="w-3.5 h-3.5" />}
+                    state={authError?.type === 'invalid_credential' ? 'error' : 'default'}
+                    errorText={authError?.type === 'invalid_credential' ? 'Invalid email or password. Access denied.' : undefined}
                     rightAction={
                       <button
                         type="button"

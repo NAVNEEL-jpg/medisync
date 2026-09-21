@@ -130,10 +130,7 @@ export default function Home() {
   if (isAuthView || !user) {
     return (
       <FrontAuthPage
-        onEnterDashboard={(targetRole) => {
-          if (!user) {
-            quickLoginAs(targetRole || 'PATIENT');
-          }
+        onEnterDashboard={() => {
           setIsAuthView(false);
         }}
       />
