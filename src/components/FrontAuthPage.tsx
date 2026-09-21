@@ -70,13 +70,6 @@ function parseAuthError(err: unknown): ParsedAuthError {
       type: 'user_not_found',
     };
   }
-  if (code === 'auth/popup-closed-by-user' || msg.includes('popup-closed-by-user')) {
-    return {
-      title: 'Sign-In Window Closed',
-      message: 'The Google authentication popup was closed before signing in.',
-      type: 'general',
-    };
-  }
   return {
     title: 'Authentication Notice',
     message: msg.replace(/^Firebase:\s*/i, '').replace(/Error\s*\([^)]*\):\s*/i, ''),
@@ -88,10 +81,8 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
   const {
     user,
     signIn,
-    signInWithGoogle,
     signUpCitizen,
     signUpOrganisation,
-    updateCitizenAadhaarAndPhone,
     quickLoginAs,
     isFirebaseActive,
   } = useAuth();
@@ -104,10 +95,9 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<ParsedAuthError | null>(null);
-  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [isEmailSubmitting, setIsEmailSubmitting] = useState(false);
   const [isOrgSubmitting, setIsOrgSubmitting] = useState(false);
-  const isAnySubmitting = isGoogleSubmitting || isEmailSubmitting || isOrgSubmitting;
+  const isAnySubmitting = isEmailSubmitting || isOrgSubmitting;
 
   // Citizen
   const [citizenName, setCitizenName] = useState('');
@@ -122,24 +112,11 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
   const [orgType, setOrgType] = useState('Hospital & Trauma Center');
   const [orgPhone, setOrgPhone] = useState('');
 
-  // Modal fallback
-  const [showAadhaarModal, setShowAadhaarModal] = useState(false);
-  const [modalAadhaar, setModalAadhaar] = useState('');
-  const [modalPhone, setModalPhone] = useState('');
-  const [modalBloodGroup, setModalBloodGroup] = useState('O+');
-  const [modalError, setModalError] = useState('');
-
   // Aadhaar formatter
   const handleAadhaarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 12);
     const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ');
     setAadhaarNumber(formatted);
-  };
-
-  const handleModalAadhaarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, '').slice(0, 12);
-    const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ');
-    setModalAadhaar(formatted);
   };
 
   const validateAadhaarAndPhone = () => {
@@ -158,25 +135,6 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
       throw new Error(`Mobile number must be at least 10 digits (currently ${cleanPhone.length}).`);
     }
     return { cleanAadhaar, cleanPhone };
-  };
-
-  const handleGoogleCitizenAuth = async () => {
-    setAuthError(null);
-    setIsGoogleSubmitting(true);
-    try {
-      if (authMode === 'signup') {
-        validateAadhaarAndPhone();
-        await signInWithGoogle({ aadhaarNumber, phoneNumber, bloodGroup, name: citizenName || undefined });
-        onEnterDashboard?.('PATIENT');
-      } else {
-        await signInWithGoogle();
-        onEnterDashboard?.('PATIENT');
-      }
-    } catch (err: unknown) {
-      setAuthError(parseAuthError(err));
-    } finally {
-      setIsGoogleSubmitting(false);
-    }
   };
 
   const handleCitizenSubmit = async (e: React.FormEvent) => {
@@ -213,22 +171,6 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
       setAuthError(parseAuthError(err));
     } finally {
       setIsOrgSubmitting(false);
-    }
-  };
-
-  const handleModalSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setModalError('');
-    const cleanAadhaar = modalAadhaar.replace(/\s/g, '');
-    if (cleanAadhaar.length !== 12) { setModalError('Aadhaar must be exactly 12 digits.'); return; }
-    if (modalPhone.replace(/\D/g, '').length < 10) { setModalError('Mobile must be at least 10 digits.'); return; }
-    try {
-      await updateCitizenAadhaarAndPhone(modalAadhaar, modalPhone, modalBloodGroup);
-      setShowAadhaarModal(false);
-      onEnterDashboard?.('PATIENT');
-    } catch (err: unknown) {
-      const e = err as Error;
-      setModalError(e.message || 'Failed to save.');
     }
   };
 
@@ -526,7 +468,7 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                     <Fingerprint className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-cyan-300">Required for registration: </span>
-                      12-digit Aadhaar number and mobile number — for both Google and email signup.
+                      12-digit Aadhaar number and mobile number for secure medical record indexing.
                     </div>
                   </div>
                 )}
@@ -576,42 +518,6 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                       </div>
                     </div>
 
-                    {/* Google Sign Up */}
-                    <div className="pt-1">
-                      <DarkCard className="p-3.5 space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[12px] font-semibold text-cyan-300 flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                            Quick sign-up with Google
-                          </span>
-                        </div>
-                        <Button
-                          variant="google"
-                          fullWidth
-                          onClick={handleGoogleCitizenAuth}
-                          loading={isGoogleSubmitting}
-                          disabled={isAnySubmitting}
-                          icon={
-                            <svg className="w-4 h-4" viewBox="0 0 24 24">
-                              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                            </svg>
-                          }
-                        >
-                          {isGoogleSubmitting ? 'Connecting to Google...' : 'Sign up with Google'}
-                        </Button>
-                      </DarkCard>
-                    </div>
-
-                    {/* Divider */}
-                    <div className="flex items-center gap-3 text-slate-500 text-[11px]">
-                      <div className="flex-1 h-px bg-white/8" />
-                      <span className="font-body">or with email</span>
-                      <div className="flex-1 h-px bg-white/8" />
-                    </div>
-
                     <DarkInput
                       label="Email address"
                       type="email"
@@ -654,30 +560,6 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
                 ) : (
                   /* SIGN IN */
                   <div className="space-y-4">
-                    <Button
-                      variant="google"
-                      fullWidth
-                      onClick={handleGoogleCitizenAuth}
-                      loading={isGoogleSubmitting}
-                      disabled={isAnySubmitting}
-                      icon={
-                        <svg className="w-4 h-4" viewBox="0 0 24 24">
-                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                        </svg>
-                      }
-                    >
-                      {isGoogleSubmitting ? 'Connecting to Google...' : 'Sign in with Google'}
-                    </Button>
-
-                    <div className="flex items-center gap-3 text-slate-500 text-[11px]">
-                      <div className="flex-1 h-px bg-white/8" />
-                      <span className="font-body">or with email</span>
-                      <div className="flex-1 h-px bg-white/8" />
-                    </div>
-
                     <form onSubmit={handleCitizenSubmit} className="space-y-3">
                       <DarkInput
                         label="Email address"
@@ -888,40 +770,6 @@ export function FrontAuthPage({ onEnterDashboard }: FrontAuthPageProps) {
           © 2026 MediSync · National Emergency Medical Information Database · ABDM Compliant
         </p>
       </footer>
-
-      {/* ── Aadhaar Modal (post-Google login fallback) ── */}
-      {showAadhaarModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAadhaarModal(false)} />
-          <div className="relative z-10 w-full max-w-md glass rounded-2xl p-6" style={{ animation: 'modal-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
-            <h2 className="text-lg font-bold text-white mb-2 font-display">Complete your health profile</h2>
-            <p className="text-[13px] text-slate-400 mb-4 font-body">Aadhaar and mobile number are required for emergency access.</p>
-
-            {modalError && (
-              <div className="mb-3 p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-[12px] flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                {modalError}
-              </div>
-            )}
-
-            <form onSubmit={handleModalSave} className="space-y-3">
-              <DarkInput label="Aadhaar number" value={modalAadhaar} onChange={handleModalAadhaarChange} icon={<Fingerprint className="w-4 h-4" />} maxLength={14} required />
-              <DarkInput label="Mobile number" type="tel" value={modalPhone} onChange={(e) => setModalPhone(e.target.value)} icon={<Phone className="w-3.5 h-3.5" />} required />
-              <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1.5 pl-1">Blood group</label>
-                <select value={modalBloodGroup} onChange={(e) => setModalBloodGroup(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-white/[0.04] border border-white/10 text-white text-[13px] outline-none cursor-pointer">
-                  {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(bg => (
-                    <option key={bg} value={bg} className="bg-slate-900">{bg}</option>
-                  ))}
-                </select>
-              </div>
-              <Button type="submit" fullWidth className="!bg-gradient-to-r !from-cyan-500 !to-teal-500">
-                Save and continue
-              </Button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

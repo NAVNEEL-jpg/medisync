@@ -200,6 +200,7 @@ export const INITIAL_PATIENTS: PatientProfile[] = [
       },
     ],
     nextReviewDueDate: '2026-12-10T00:00:00Z', // 4 months from Aug 10
+    hasCompletedSetup: true,
     isRegisteredAtOfflineCamp: false,
     accessLogs: [
       {
@@ -296,7 +297,8 @@ export const INITIAL_PATIENTS: PatientProfile[] = [
     lastProfileUpdate: '2026-09-12T11:15:00Z',
     nextReviewDueDate: '2027-01-12T00:00:00Z',
     isRegisteredAtOfflineCamp: true,
-    registeredCampLocation: 'MediSync Rural Outreach Camp #14, CHC Ramgarh',
+    registeredCampLocation: 'Alwar Rural Camp #4',
+    hasCompletedSetup: true,
     accessLogs: [],
   },
 ];

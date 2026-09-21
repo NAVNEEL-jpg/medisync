@@ -58,6 +58,8 @@ function buildEmptyPatientProfile(currentUser: NonNullable<ReturnType<typeof use
     nominees: [],
     organDonor: false,
     dnrStatus: false,
+    hasCompletedSetup: false,
+    hasNoKnownAllergies: true,
     diagnostics: [],
     surgicalLogs: [],
     lastProfileUpdate: new Date().toISOString(),

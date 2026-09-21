@@ -143,9 +143,8 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
   // Determine if this is a demo user vs new patient with incomplete info
   const isDemoUser = user?.uid === 'demo-pat-01' || user?.email === 'rajesh.sharma@gmail.com' || user?.authProvider === 'demo';
   const hasVitals = !!patient.vitals?.bloodPressure && patient.vitals.bloodPressure !== '--/--' && patient.vitals.bloodPressure !== '' && patient.vitals.bloodPressure !== '--';
-  const hasAllergies = !!(patient.allergies && patient.allergies.length > 0);
-  const hasEmergencyContact = !!(patient.emergencyContacts && patient.emergencyContacts.length > 0);
-  const isProfileIncomplete = !isDemoUser && (!hasVitals || !hasAllergies || !hasEmergencyContact || !patient.aadhaarNumber);
+  const hasEmergencyContact = !!(patient.emergencyContacts && patient.emergencyContacts.length > 0 && patient.emergencyContacts[0]?.phone);
+  const isProfileIncomplete = !isDemoUser && !patient.hasCompletedSetup && (!hasVitals || !hasEmergencyContact || !patient.aadhaarNumber);
 
   // Setup modal state for new user onboarding
   const [setupName, setSetupName] = useState(patient.fullName || '');
@@ -156,8 +155,16 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
   const [setupContactName, setSetupContactName] = useState(patient.emergencyContacts?.[0]?.name || '');
   const [setupContactRel, setSetupContactRel] = useState(patient.emergencyContacts?.[0]?.relationship || 'Parent');
   const [setupContactPhone, setSetupContactPhone] = useState(patient.emergencyContacts?.[0]?.phone || patient.mobileNumber || '');
-  const [setupAllergies, setSetupAllergies] = useState<string[]>(patient.allergies?.map(a => a.allergen) || []);
-  const [setupConditions, setSetupConditions] = useState<string[]>(patient.existingConditions || []);
+  const [setupAllergies, setSetupAllergies] = useState<string[]>(() =>
+    patient.allergies && patient.allergies.length > 0
+      ? patient.allergies.map(a => a.allergen)
+      : ['No Known Allergies']
+  );
+  const [setupConditions, setSetupConditions] = useState<string[]>(() =>
+    patient.existingConditions && patient.existingConditions.length > 0
+      ? patient.existingConditions
+      : ['None (Healthy)']
+  );
   const [setupBp, setSetupBp] = useState(patient.vitals?.bloodPressure && patient.vitals.bloodPressure !== '--/--' ? patient.vitals.bloodPressure : '');
   const [setupHeartRate, setSetupHeartRate] = useState<number>(patient.vitals?.heartRate || 0);
   const [setupSpo2, setSetupSpo2] = useState<number>(patient.vitals?.spO2 || 0);
@@ -184,8 +191,16 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
     setSetupContactName(patient.emergencyContacts?.[0]?.name || '');
     setSetupContactRel(patient.emergencyContacts?.[0]?.relationship || 'Parent');
     setSetupContactPhone(patient.emergencyContacts?.[0]?.phone || patient.mobileNumber || '');
-    setSetupAllergies(patient.allergies?.map(a => a.allergen) || []);
-    setSetupConditions(patient.existingConditions || []);
+    setSetupAllergies(
+      patient.allergies && patient.allergies.length > 0
+        ? patient.allergies.map(a => a.allergen)
+        : ['No Known Allergies']
+    );
+    setSetupConditions(
+      patient.existingConditions && patient.existingConditions.length > 0
+        ? patient.existingConditions
+        : ['None (Healthy)']
+    );
     setSetupBp(patient.vitals?.bloodPressure && patient.vitals.bloodPressure !== '--/--' ? patient.vitals.bloodPressure : '');
     setSetupHeartRate(patient.vitals?.heartRate || 0);
     setSetupSpo2(patient.vitals?.spO2 || 0);
@@ -200,7 +215,8 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
     setSetupAllergies(prev => {
       const filtered = prev.filter(a => a !== 'No Known Allergies');
       if (filtered.includes(allergen)) {
-        return filtered.filter(a => a !== allergen);
+        const next = filtered.filter(a => a !== allergen);
+        return next.length === 0 ? ['No Known Allergies'] : next;
       } else {
         return [...filtered, allergen];
       }
@@ -226,7 +242,8 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
     setSetupConditions(prev => {
       const filtered = prev.filter(c => c !== 'None (Healthy)');
       if (filtered.includes(condition)) {
-        return filtered.filter(c => c !== condition);
+        const next = filtered.filter(c => c !== condition);
+        return next.length === 0 ? ['None (Healthy)'] : next;
       } else {
         return [...filtered, condition];
       }
@@ -246,13 +263,16 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
 
   const handleSetupModalSave = (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedAllergies = setupAllergies
-      .filter(a => a !== 'No Known Allergies')
-      .map(allergen => ({
-        allergen,
-        severity: 'CRITICAL' as const,
-        reaction: 'Severe reaction — notify triage and consult physician',
-      }));
+    const isNoKnownAllergies = setupAllergies.includes('No Known Allergies') || setupAllergies.length === 0;
+    const updatedAllergies = isNoKnownAllergies
+      ? []
+      : setupAllergies
+          .filter(a => a !== 'No Known Allergies')
+          .map(allergen => ({
+            allergen,
+            severity: 'CRITICAL' as const,
+            reaction: 'Severe reaction — notify triage and consult physician',
+          }));
 
     const updatedContacts = setupContactPhone ? [
       {
@@ -262,10 +282,12 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
         phone: setupContactPhone,
         isPrimary: true,
       }
-    ] : [];
+    ] : (patient.emergencyContacts || []);
 
     const updatedPatient: PatientProfile = {
       ...patient,
+      hasCompletedSetup: true,
+      hasNoKnownAllergies: isNoKnownAllergies,
       fullName: setupName || patient.fullName,
       aadhaarNumber: setupAadhaar || patient.aadhaarNumber,
       dob: setupDob || patient.dob,
@@ -277,9 +299,9 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
       emergencyContacts: updatedContacts,
       vitals: {
         ...patient.vitals,
-        bloodPressure: setupBp ? (setupBp.includes('mmHg') ? setupBp : `${setupBp} mmHg`) : (patient.vitals?.bloodPressure || '--/--'),
-        heartRate: Number(setupHeartRate) > 0 ? Number(setupHeartRate) : 0,
-        spO2: Number(setupSpo2) > 0 ? Number(setupSpo2) : 0,
+        bloodPressure: setupBp ? (setupBp.includes('mmHg') ? setupBp : `${setupBp} mmHg`) : (patient.vitals?.bloodPressure || '120/80 mmHg'),
+        heartRate: Number(setupHeartRate) > 0 ? Number(setupHeartRate) : (patient.vitals?.heartRate || 72),
+        spO2: Number(setupSpo2) > 0 ? Number(setupSpo2) : (patient.vitals?.spO2 || 98),
         lastRecorded: new Date().toISOString(),
       },
       lastProfileUpdate: new Date().toISOString().slice(0, 10),
@@ -1125,6 +1147,21 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
                         </div>
                       );
                     })
+                  ) : patient.hasNoKnownAllergies || patient.hasCompletedSetup ? (
+                    <div className="p-5 rounded-2xl text-center space-y-2"
+                         style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.25)' }}>
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+                        <Check className="w-4 h-4" />
+                      </div>
+                      <p className="text-sm font-bold text-emerald-300">No Known Allergies (NKA) Documented</p>
+                      <p className="text-xs text-slate-300">Patient profile recorded as having no active drug, chemical, or food allergies.</p>
+                      <button
+                        onClick={() => { setActiveRecordTab('allergies'); document.getElementById('record-form-section')?.scrollIntoView({ behavior: 'smooth' }); }}
+                        className="mt-1 text-xs font-bold text-rose-400 hover:text-rose-300 underline cursor-pointer inline-block"
+                      >
+                        + Report New Allergy
+                      </button>
+                    </div>
                   ) : (
                     <div className="p-5 rounded-2xl text-center space-y-2"
                          style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.15)' }}>

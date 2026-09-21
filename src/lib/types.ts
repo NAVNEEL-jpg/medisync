@@ -134,6 +134,8 @@ export interface PatientProfile {
 
   lastProfileUpdate: string;
   lastUpdatedBy?: string;
+  hasCompletedSetup?: boolean;
+  hasNoKnownAllergies?: boolean;
   vitalsHistory?: VitalLogEntry[];
   nextReviewDueDate: string;
   isRegisteredAtOfflineCamp: boolean;
