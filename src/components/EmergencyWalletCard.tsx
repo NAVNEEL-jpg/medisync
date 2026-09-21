@@ -5,9 +5,7 @@ import { PatientProfile } from '@/lib/types';
 import {
   ShieldAlert,
   Activity,
-  QrCode,
   Phone,
-  Heart,
   Printer,
   Download,
   CheckCircle2,
@@ -17,6 +15,7 @@ import {
   Check,
   Package,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface EmergencyWalletCardProps {
   patient?: PatientProfile;
@@ -91,9 +90,9 @@ export function EmergencyWalletCard({ patient }: EmergencyWalletCardProps) {
           {cardSide === 'FRONT' ? (
             <div className="bg-[#0f172a] text-white rounded-3xl p-6 shadow-2xl border-2 border-slate-700 min-h-[360px] flex flex-col justify-between relative overflow-hidden">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center font-bold">
-                    +
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 shadow-sm">
+                    <img src="/medisync-logo.jpg" alt="MediSync" className="w-full h-full object-cover" />
                   </div>
                   <div>
                     <span className="font-black text-sm tracking-tight text-white block leading-none">
@@ -138,8 +137,13 @@ export function EmergencyWalletCard({ patient }: EmergencyWalletCardProps) {
                   </div>
                 </div>
 
-                <div className="p-3 bg-white rounded-2xl text-slate-900 flex flex-col items-center shadow-lg border-2 border-sky-400 shrink-0">
-                  <QrCode className="w-24 h-24" />
+                <div className="p-2.5 bg-white rounded-2xl text-slate-900 flex flex-col items-center shadow-lg border-2 border-sky-400 shrink-0">
+                  <QRCodeSVG
+                    value={`https://medisync.vercel.app/emergency/${(patient?.id || 'MED-8849-0091-TX').replace('#', '')}`}
+                    size={96}
+                    level="M"
+                    marginSize={1}
+                  />
                   <span className="text-[8px] font-black uppercase mt-1 tracking-tighter">
                     EMT SCAN DIRECT
                   </span>

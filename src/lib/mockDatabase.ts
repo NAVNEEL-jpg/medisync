@@ -92,6 +92,61 @@ export const INITIAL_PATIENTS: PatientProfile[] = [
         notes: 'Lipid profile reassessment scheduled.',
       },
     ],
+    diagnostics: [
+      {
+        id: 'diag-1',
+        testName: 'HbA1c (Glycated Hemoglobin)',
+        value: '6.8',
+        unit: '%',
+        referenceRange: '4.0 - 5.6%',
+        status: 'ELEVATED',
+        laboratoryName: 'Dr. Lal PathLabs, Central Branch',
+        dateRecorded: '2026-09-12',
+        specialNote: 'Follow low carbohydrate diet; retest after 90 days.',
+      },
+      {
+        id: 'diag-2',
+        testName: 'Serum Creatinine',
+        value: '1.1',
+        unit: 'mg/dL',
+        referenceRange: '0.7 - 1.3 mg/dL',
+        status: 'NORMAL',
+        laboratoryName: 'Apollo Diagnostics Laboratory',
+        dateRecorded: '2026-09-10',
+        specialNote: 'Renal profile within safe baseline.',
+      },
+      {
+        id: 'diag-3',
+        testName: 'Troponin-I (High Sensitivity)',
+        value: '0.012',
+        unit: 'ng/mL',
+        referenceRange: '< 0.04 ng/mL',
+        status: 'NORMAL',
+        laboratoryName: 'AIIMS Emergency Bio-Core',
+        dateRecorded: '2026-08-28',
+        specialNote: 'Cardiac biomarker negative for acute necrosis.',
+      },
+    ],
+    surgicalLogs: [
+      {
+        id: 'surg-1',
+        procedureName: 'Coronary Angioplasty with Drug-Eluting Stent in LAD',
+        surgeryDate: '2022-05-14',
+        operatingSurgeon: 'Dr. Vivek Mehra (Cardiologist, MD DM)',
+        hospitalOfSurgery: 'AIIMS New Delhi Trauma Center',
+        implantsUsed: 'Xience Sierra 3.0x28mm Everolimus-Eluting Coronary Stent',
+        specialNote: 'Dual antiplatelet therapy mandatory. No contrast angiography without hydration.',
+      },
+      {
+        id: 'surg-2',
+        procedureName: 'Laparoscopic Cholecystectomy',
+        surgeryDate: '2018-11-20',
+        operatingSurgeon: 'Dr. Sanjay Kaul (MS General Surgery)',
+        hospitalOfSurgery: 'SMS Medical College Hospital, Jaipur',
+        implantsUsed: 'Titanium ligating surgical clips (MRI Safe)',
+        specialNote: 'Uneventful recovery. Gallbladder histology benign.',
+      },
+    ],
     emergencyContacts: [
       {
         id: 'ec-1',
@@ -121,6 +176,29 @@ export const INITIAL_PATIENTS: PatientProfile[] = [
     organDonor: true,
     dnrStatus: false,
     lastProfileUpdate: '2026-08-10T14:20:00Z',
+    lastUpdatedBy: 'Dr. Vivek Mehra (SMS Medical College Hospital)',
+    vitalsHistory: [
+      {
+        id: 'vh-1',
+        timestamp: '2026-08-10T14:20:00Z',
+        recordedBy: 'Dr. Vivek Mehra (SMS Hospital)',
+        heartRate: 78,
+        bloodPressure: '138/86 mmHg',
+        spO2: 97,
+        bloodSugar: '142 mg/dL',
+        notes: 'Post-PCI routine checkup. Vitals stable.',
+      },
+      {
+        id: 'vh-0',
+        timestamp: '2026-05-14T09:15:00Z',
+        recordedBy: 'AIIMS New Delhi Trauma ICU',
+        heartRate: 84,
+        bloodPressure: '144/90 mmHg',
+        spO2: 96,
+        bloodSugar: '158 mg/dL',
+        notes: 'Pre-discharge clinical assessment.',
+      },
+    ],
     nextReviewDueDate: '2026-12-10T00:00:00Z', // 4 months from Aug 10
     isRegisteredAtOfflineCamp: false,
     accessLogs: [
@@ -297,5 +375,64 @@ export function registerCampPatient(profileData: Omit<PatientProfile, 'id' | 'la
   };
 
   currentPatients.unshift(newPatient);
+  return newPatient;
+}
+
+/**
+ * Generate unique individual patient ID matching format e.g. MS-IND-DQ1Q1
+ */
+export function generateHospitalPatientId(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let suffix = '';
+  for (let i = 0; i < 5; i++) {
+    suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `MS-IND-${suffix}`;
+}
+
+/**
+ * Retrieve all hospital enrolled patients from localStorage and in-memory DB
+ */
+export function getHospitalPatients(): PatientProfile[] {
+  if (typeof window === 'undefined') {
+    return currentPatients;
+  }
+  try {
+    const raw = localStorage.getItem('medisync_hospital_patients');
+    if (raw) {
+      const parsed: PatientProfile[] = JSON.parse(raw);
+      const mergedMap = new Map<string, PatientProfile>();
+      currentPatients.forEach((p) => mergedMap.set(p.id, p));
+      parsed.forEach((p) => mergedMap.set(p.id, p));
+      return Array.from(mergedMap.values());
+    }
+  } catch (e) {
+    console.warn('Could not load hospital patients from storage:', e);
+  }
+  return currentPatients;
+}
+
+/**
+ * Save / enroll a patient into the hospital sub-database
+ */
+export function saveHospitalPatient(newPatient: PatientProfile): PatientProfile {
+  const existingIdx = currentPatients.findIndex((p) => p.id === newPatient.id);
+  if (existingIdx !== -1) {
+    currentPatients[existingIdx] = newPatient;
+  } else {
+    currentPatients.unshift(newPatient);
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const existing = getHospitalPatients();
+      const updated = [newPatient, ...existing.filter((p) => p.id !== newPatient.id)];
+      localStorage.setItem('medisync_hospital_patients', JSON.stringify(updated));
+      localStorage.setItem(`medisync_patient_${newPatient.id}`, JSON.stringify(newPatient));
+      localStorage.setItem(`medisync_patient_${newPatient.id.replace('#', '')}`, JSON.stringify(newPatient));
+    } catch (e) {
+      console.warn('Could not persist hospital patient:', e);
+    }
+  }
   return newPatient;
 }

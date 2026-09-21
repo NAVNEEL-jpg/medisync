@@ -9,6 +9,7 @@ import {
   TRENDING_VECTORS,
 } from '@/lib/newsData';
 import { ClinicalDispatch } from '@/lib/types';
+import { Skeleton } from '@/components/ui/Skeleton';
 import {
   AlertTriangle,
   Radio,
@@ -345,11 +346,22 @@ export function GlobalMedicalNews() {
 
           {/* Dispatches List */}
           <div className="space-y-4">
-            {filteredDispatches.map((dispatch) => (
-              <div
-                key={dispatch.id}
-                className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3 transition hover:border-[#0284c7]/60"
-              >
+            {isLoading ? (
+              <div className="space-y-3">
+                <Skeleton variant="card" height={130} />
+                <Skeleton variant="card" height={130} />
+                <Skeleton variant="card" height={130} />
+              </div>
+            ) : filteredDispatches.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center text-slate-500 text-sm">
+                No clinical dispatches found matching your search query.
+              </div>
+            ) : (
+              filteredDispatches.map((dispatch) => (
+                <div
+                  key={dispatch.id}
+                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3 transition hover:border-[#0284c7]/60"
+                >
                 {/* Meta Header */}
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -481,7 +493,7 @@ export function GlobalMedicalNews() {
                   </div>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         </div>
 

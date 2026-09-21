@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -21,15 +21,21 @@ export const isFirebaseConfigured = Boolean(
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let googleProvider: GoogleAuthProvider | null = null;
 
 if (isFirebaseConfigured) {
   try {
     app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+    googleProvider = new GoogleAuthProvider();
+    // Allow cached credentials for accelerated sign-in
+    googleProvider.addScope('email');
+    googleProvider.addScope('profile');
   } catch (error) {
     console.warn('Firebase initialization error, falling back to local persistent store:', error);
   }
 }
 
-export { app, auth, db };
+export { app, auth, db, googleProvider };
+

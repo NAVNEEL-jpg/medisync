@@ -22,7 +22,6 @@ import {
   Download,
   Eye,
   Activity,
-  Heart,
   ExternalLink,
 } from 'lucide-react';
 

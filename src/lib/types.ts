@@ -7,6 +7,18 @@ export interface VitalSigns {
   lastRecorded: string;
 }
 
+export interface VitalLogEntry {
+  id: string;
+  timestamp: string;
+  recordedBy: string;
+  heartRate?: number;
+  bloodPressure?: string;
+  spO2?: number;
+  bloodSugar?: string;
+  temperature?: string;
+  notes?: string;
+}
+
 export interface Allergy {
   allergen: string;
   severity: 'CRITICAL' | 'MODERATE' | 'MILD';
@@ -80,6 +92,7 @@ export interface PatientProfile {
   aadhaarNumber: string;
   mobileNumber: string;
   dob: string;
+  age?: number | string;
   gender: 'Male' | 'Female' | 'Other';
   bloodGroup: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
   photoUrl?: string;
@@ -89,6 +102,7 @@ export interface PatientProfile {
 
   // Medical Profile
   existingConditions: string[];
+  chronicConditions?: string[];
   pastDiseases: string[];
   surgeriesAndImplants: string[];
   implantsDetailed?: MedicalImplant[];
@@ -101,12 +115,56 @@ export interface PatientProfile {
   organDonor: boolean;
   dnrStatus: boolean;
 
+  // New Record Collections
+  diagnostics?: DiagnosticRecord[];
+  surgicalLogs?: SurgicalRecord[];
+
+  email?: string;
+  abhaId?: string; // e.g. 91-8821-3940-1928 or patient@abdm
+  documents?: {
+    id: string;
+    name: string;
+    type: string; // e.g. 'Lab Report', 'Aadhaar Card', 'Discharge Summary'
+    date: string;
+    url?: string;
+    size?: string;
+  }[];
+  enrolledByHospital?: string;
+  enrolledAt?: string;
+
   lastProfileUpdate: string;
+  lastUpdatedBy?: string;
+  vitalsHistory?: VitalLogEntry[];
   nextReviewDueDate: string;
   isRegisteredAtOfflineCamp: boolean;
   registeredCampLocation?: string;
   accessLogs: AccessAuditLog[];
 }
+
+export interface DiagnosticRecord {
+  id: string;
+  testName: string;
+  value: string;
+  unit: string;
+  referenceRange: string;
+  status: 'NORMAL' | 'ELEVATED' | 'LOW' | 'CRITICAL';
+  laboratoryName: string;
+  reportPicUrl?: string;
+  specialNote?: string;
+  dateRecorded: string;
+}
+
+export interface SurgicalRecord {
+  id: string;
+  procedureName: string;
+  surgeryDate: string;
+  operatingSurgeon: string;
+  hospitalOfSurgery: string;
+  implantsUsed?: string;
+  dischargeSummaryUrl?: string;
+  specialNote?: string;
+}
+
 
 // Global Medical News Types
 export interface ClinicalDispatch {

@@ -8,10 +8,11 @@ import {
   Activity,
   Globe2,
   ShieldCheck,
-  Radio,
+  HeartPulse,
 } from 'lucide-react';
 
 export type NavigationPage =
+  | 'FRONT_LOGIN'
   | 'PATIENT_DASHBOARD'
   | 'EMERGENCY_QR_VIEW'
   | 'WALLET_CARD'
@@ -27,43 +28,55 @@ interface ClinicalSidebarProps {
 export function ClinicalSidebar({ currentPage, onNavigate }: ClinicalSidebarProps) {
   const navItems = [
     {
+      id: 'FRONT_LOGIN' as NavigationPage,
+      label: 'Login & Security',
+      sublabel: 'Sign in / Sign up',
+      icon: ShieldCheck,
+    },
+    {
       id: 'PATIENT_DASHBOARD' as NavigationPage,
-      label: 'Patient Dashboard',
+      label: 'My Health Records',
+      sublabel: 'Tests, prescriptions & history',
       icon: LayoutGrid,
     },
     {
       id: 'EMERGENCY_QR_VIEW' as NavigationPage,
-      label: 'Emergency QR View',
+      label: 'Emergency QR Card',
+      sublabel: 'For doctors in emergencies',
       icon: QrCode,
     },
     {
       id: 'WALLET_CARD' as NavigationPage,
       label: 'Emergency Wallet Card',
+      sublabel: 'Print & carry your details',
       icon: CreditCard,
     },
     {
       id: 'CLINICAL_TRIAGE_REGISTRY' as NavigationPage,
-      label: 'Clinical Triage Registry',
+      label: 'Clinical Triage',
+      sublabel: 'Hospital registry view',
       icon: Activity,
     },
     {
       id: 'GLOBAL_MEDICAL_NEWS' as NavigationPage,
-      label: 'Global Medical News',
+      label: 'Health News',
+      sublabel: 'Latest medical updates',
       icon: Globe2,
     },
     {
       id: 'SECURE_AUTH' as NavigationPage,
-      label: 'Secure Auth & Verification',
+      label: 'Health ID (NDHM)',
+      sublabel: 'National Health identity',
       icon: ShieldCheck,
     },
   ];
 
   return (
     <aside className="w-64 shrink-0 hidden md:flex flex-col justify-between py-6 pr-4 space-y-6">
-      <div className="space-y-4">
-        <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 font-sans">
-          Clinical Navigation
-        </h4>
+      <div className="space-y-5">
+        <p className="text-[11px] font-semibold px-3 font-display" style={{ color: 'var(--color-foreground-muted)' }}>
+          Navigation
+        </p>
 
         <nav className="space-y-1">
           {navItems.map((item) => {
@@ -73,31 +86,54 @@ export function ClinicalSidebar({ currentPage, onNavigate }: ClinicalSidebarProp
               <button
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
-                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl font-bold text-xs transition text-left ${
-                  isActive
-                    ? 'bg-[#0284c7] text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                }`}
+                className={`sidebar-nav-btn press-scale ${isActive ? 'active' : 'inactive'}`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
-                <span className="truncate">{item.label}</span>
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                  style={{
+                    background: isActive ? 'var(--clr-coral)' : 'var(--color-muted)',
+                  }}
+                >
+                  <Icon
+                    className="w-4 h-4"
+                    style={{ color: isActive ? 'white' : 'var(--color-foreground-muted)' }}
+                  />
+                </div>
+                <div className="text-left min-w-0">
+                  <span className="block truncate text-[13px]"
+                        style={{ color: isActive ? 'var(--clr-coral-hover)' : 'var(--color-foreground)', fontWeight: 600 }}>
+                    {item.label}
+                  </span>
+                  {item.sublabel && (
+                    <span className="block truncate text-[11px] font-normal" style={{ color: 'var(--color-foreground-muted)' }}>
+                      {item.sublabel}
+                    </span>
+                  )}
+                </div>
               </button>
             );
           })}
         </nav>
       </div>
 
-      {/* Bottom Triage Protocol Card */}
-      <div className="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/80 text-xs space-y-1">
+      {/* Bottom health status card */}
+      <div className="rounded-2xl p-4 space-y-3"
+           style={{ background: 'var(--clr-navy)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-slate-700">Triage Protocol</span>
-          <span className="text-[10px] font-extrabold uppercase text-sky-800 bg-sky-100 px-1.5 py-0.5 rounded flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            ONLINE
+          <div className="flex items-center gap-2">
+            <HeartPulse className="w-4 h-4" style={{ color: 'var(--clr-coral)' }} />
+            <span className="text-[12px] font-semibold font-display" style={{ color: '#E2E8F0' }}>
+              Health System
+            </span>
+          </div>
+          <span className="flex items-center gap-1.5 text-[10px] font-bold font-display"
+                style={{ color: 'var(--clr-mint)' }}>
+            <span className="status-dot-green" />
+            Online
           </span>
         </div>
-        <p className="text-[10px] text-slate-500 leading-tight">
-          Rapid vitals and medical alert routing active for triage ward.
+        <p className="text-[11px] leading-relaxed" style={{ color: '#64748B' }}>
+          Your records are encrypted and safe. Accessible to you and authorised doctors only.
         </p>
       </div>
     </aside>
