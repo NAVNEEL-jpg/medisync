@@ -136,16 +136,39 @@ export function DesignForBharatModal({ isOpen, onClose }: DesignForBharatModalPr
               <h3 className="text-white font-display font-bold text-base">
                 1. What problem are we solving?
               </h3>
+              <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/40 space-y-2">
+                <span className="text-[11px] font-mono text-rose-400 font-bold uppercase tracking-wider">
+                  The Golden Hour Crisis (150,000+ Preventable Deaths Annually)
+                </span>
+                <p className="text-xs text-slate-200 leading-relaxed">
+                  In emergency trauma medicine, the first 60 minutes determine patient survival. Unconscious victims arriving at Indian emergency rooms face <strong>3 fatal trauma blind spots</strong>:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs">
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-rose-500/20">
+                    <p className="text-rose-300 font-bold text-[11px]">⚠ 1. Lethal Drug Allergies</p>
+                    <p className="text-slate-400 text-[10px] mt-0.5">Penicillin / NSAIDs administered to unconscious victims causing fatal anaphylaxis.</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-amber-500/20">
+                    <p className="text-amber-300 font-bold text-[11px]">⚠ 2. Hidden Implants</p>
+                    <p className="text-slate-400 text-[10px] mt-0.5">Non-conditional pacemakers & aneurysm clips causing fatal trauma under emergency MRI.</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-cyan-500/20">
+                    <p className="text-cyan-300 font-bold text-[11px]">⚠ 3. Fragmented Silos</p>
+                    <p className="text-slate-400 text-[10px] mt-0.5">Records locked in distant clinic papers or behind locked smartphone passcodes.</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-4 rounded-2xl bg-rose-950/30 border border-rose-500/30">
+                <div className="p-3.5 rounded-2xl bg-rose-950/20 border border-rose-500/20">
                   <h4 className="text-rose-300 font-bold text-xs uppercase tracking-wider font-mono">The Elderly Care Crisis</h4>
-                  <p className="text-xs text-slate-300 mt-1.5">
-                    Over 138 million elderly Indians live without round-the-clock medical supervision. Accidental falls and silent cardiovascular distress often go unnoticed for hours because imported smartwatches cost over ₹25,000 and require complex smartphone pairing.
+                  <p className="text-xs text-slate-300 mt-1">
+                    Over 138 million elderly Indians live without round-the-clock medical supervision. Accidental falls and silent cardiovascular distress go unnoticed for hours because imported smartwatches cost over ₹25,000 and require complex smartphone pairing.
                   </p>
                 </div>
-                <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30">
+                <div className="p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/20">
                   <h4 className="text-amber-300 font-bold text-xs uppercase tracking-wider font-mono">The Rural Doctor Deficit</h4>
-                  <p className="text-xs text-slate-300 mt-1.5">
+                  <p className="text-xs text-slate-300 mt-1">
                     In primary health centers (PHCs), doctor-to-patient ratios often exceed 1:11,000. Paramedics and ASHA workers lack portable diagnostic records when an unconscious patient arrives at emergency triage.
                   </p>
                 </div>

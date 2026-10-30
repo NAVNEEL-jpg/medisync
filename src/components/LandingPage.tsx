@@ -5,6 +5,7 @@ import { useAuth, UserRole } from '@/context/AuthContext';
 import { MediSyncLogo } from '@/components/MediSyncLogo';
 import { CareLinkDeviceGraphic } from '@/components/CareLinkDeviceGraphic';
 import { DesignForBharatModal } from '@/components/DesignForBharatModal';
+import { GlobalMedicalNews } from '@/components/GlobalMedicalNews';
 import {
   Shield,
   Activity,
@@ -28,6 +29,9 @@ import {
   ArrowUpRight,
   AlertTriangle,
   Zap,
+  X,
+  Radar,
+  Flame,
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -38,6 +42,7 @@ interface LandingPageProps {
 export function LandingPage({ onEnterPortal, onOpenAuthModal }: LandingPageProps) {
   const { user, quickLoginAs } = useAuth();
   const [showJudgeModal, setShowJudgeModal] = useState(false);
+  const [showBiosurveillanceModal, setShowBiosurveillanceModal] = useState(false);
 
   const handleLaunchRole = (role: UserRole) => {
     quickLoginAs(role);
@@ -223,45 +228,85 @@ export function LandingPage({ onEnterPortal, onOpenAuthModal }: LandingPageProps
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <span className="text-xs font-mono text-rose-400 font-bold uppercase tracking-wider">
-              The Reality of Indian Healthcare
+              The Reality of Indian Emergency Healthcare
             </span>
             <h2 className="text-2xl sm:text-4xl font-display font-bold text-white tracking-tight">
-              Why Existing Solutions Fail the Masses in Bharat
+              The "Golden Hour" Crisis: 150,000+ Preventable Deaths Annually
             </h2>
             <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
-              Modern digital health innovations routinely overlook the practical constraints of elderly citizens and rural outreach centers across India.
+              In the critical first 60 minutes after severe trauma, cardiac arrest, or accidental falls, emergency responders treat unconscious patients with <strong>zero access to medical history</strong>, creating lethal blind spots.
             </p>
           </div>
 
+          {/* Golden Hour Trauma Blind Spots Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-3xl bg-slate-900/60 border border-rose-500/20 space-y-3">
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-rose-500/30 space-y-3 hover:border-rose-400 transition-all shadow-lg">
               <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-display font-bold text-white">Elderly Care &amp; Silent Falls</h3>
+              <span className="text-[11px] font-mono text-rose-400 font-bold uppercase tracking-wider">Blind Spot 1</span>
+              <h3 className="text-lg font-display font-bold text-white">Lethal Drug Allergies</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Over 138 million elderly Indians live without immediate clinical oversight. Accidental slips and syncopal events often go unnoticed for hours. Imported smartwatches cost over ₹25,000 and require complex smartphone pairing that elderly users struggle to navigate.
+                Unconscious patients administered Penicillin or NSAIDs by first responders suffer catastrophic anaphylactic shock or gastric hemorrhage due to zero EHR visibility during trauma intake.
               </p>
+              <div className="pt-2 border-t border-white/5 text-[11px] font-mono text-rose-300">
+                Risk: Catastrophic Anaphylaxis
+              </div>
             </div>
 
-            <div className="p-6 rounded-3xl bg-slate-900/60 border border-amber-500/20 space-y-3">
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-amber-500/30 space-y-3 hover:border-amber-400 transition-all shadow-lg">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <Users className="w-6 h-6" />
+                <Zap className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-display font-bold text-white">Rural Doctor Deficit (1:11,000)</h3>
+              <span className="text-[11px] font-mono text-amber-400 font-bold uppercase tracking-wider">Blind Spot 2</span>
+              <h3 className="text-lg font-display font-bold text-white">Hidden Surgical Implants</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Primary Health Centers face extreme doctor shortages. Frontline ASHA workers lack portable diagnostic recording tools, and village camps struggle with frequent power outages and zero cellular signal.
+                Emergency MRI scans performed without awareness of non-conditional pacemakers, aneurysm clips, or metallic hardware cause lethal internal burns and tissue displacement.
               </p>
+              <div className="pt-2 border-t border-white/5 text-[11px] font-mono text-amber-300">
+                Risk: MRI High-Field Injury
+              </div>
             </div>
 
-            <div className="p-6 rounded-3xl bg-slate-900/60 border border-cyan-500/20 space-y-3">
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-cyan-500/30 space-y-3 hover:border-cyan-400 transition-all shadow-lg">
               <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                <QrCode className="w-6 h-6" />
+                <Lock className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-display font-bold text-white">Blind Roadside Emergencies</h3>
+              <span className="text-[11px] font-mono text-cyan-400 font-bold uppercase tracking-wider">Blind Spot 3</span>
+              <h3 className="text-lg font-display font-bold text-white">Fragmented Silos &amp; Biometrics</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                When an unconscious patient arrives at emergency trauma triage, doctors cannot ascertain critical penicillin allergies, stent implants, or blood groups. Paper files are missing, and phone passcodes lock health records away.
+                Health data in India remains trapped in disparate private clinic files, paper prescriptions, or inaccessible behind locked smartphone biometrics of an unconscious victim.
               </p>
+              <div className="pt-2 border-t border-white/5 text-[11px] font-mono text-cyan-300">
+                Risk: Zero-Information Triage
+              </div>
+            </div>
+          </div>
+
+          {/* Grassroots & Elderly Constraints */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+            <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0 mt-1">
+                <Heart className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">Elderly Care &amp; Silent Falls</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Over 138 million elderly Indians live without round-the-clock medical oversight. Commercial smartwatches cost ₹25,000+ and require complex smartphone pairing that seniors struggle to operate.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 shrink-0 mt-1">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">Rural Doctor Deficit (1:11,000)</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Primary Health Centers face severe shortages. Frontline ASHA workers lack portable diagnostic records, and village camps battle frequent blackouts and zero cellular reception.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -459,6 +504,75 @@ export function LandingPage({ onEnterPortal, onOpenAuthModal }: LandingPageProps
         </div>
       </section>
 
+      {/* ── CLINICAL AI & BIOSURVEILLANCE RADAR ────────────────── */}
+      <section id="biosurveillance" className="py-16 sm:py-24 px-4 sm:px-8 bg-[#020815] border-b border-white/5">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">
+              Clinical AI &amp; Biosurveillance Radar
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-display font-bold text-white tracking-tight">
+              Predictive Intelligence &amp; Syndromic Disease Watch
+            </h2>
+            <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
+              MediSync CareLink combines Google Gemini AI clinical summarization with a real-time syndromic surveillance radar that tracks outbreaks and emergency surges across Indian districts.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-cyan-500/30 space-y-3 hover:border-cyan-400 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-display font-bold text-white">Gemini Multi-Model AI</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Zero-downtime medical report explanations, automatic prescription extraction, and trilingual vernacular translations with strict clinical boundaries and zero hallucinations guardrails.
+              </p>
+              <div className="pt-2 border-t border-white/5 text-[11px] font-mono text-cyan-300">
+                Source-Attributed Clinical Summaries
+              </div>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-teal-500/30 space-y-3 hover:border-teal-400 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400">
+                <Globe2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-display font-bold text-white">Planetary Biosurveillance</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Live syndromic disease surveillance radar monitoring heatwave alerts, vector-borne surges (Dengue, Malaria), and WHO/CDC bulletins directly connected to hospital triage portals.
+              </p>
+              <div className="pt-2 border-t border-white/5 text-[11px] font-mono text-teal-300">
+                Sub-Second District Telemetry Feeds
+              </div>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-purple-500/30 space-y-3 hover:border-purple-400 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <Shield className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-display font-bold text-white">Break-Glass Audit &amp; NMC Trail</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Sub-180ms emergency record decryption for licensed trauma doctors during trauma triage. Every override triggers an immutable, tamper-evident audit record compliant with NMC regulations.
+              </p>
+              <div className="pt-2 border-t border-white/5 text-[11px] font-mono text-purple-300">
+                100% Tamper-Evident Access Log
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center pt-2">
+            <button
+              onClick={() => setShowBiosurveillanceModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-display font-bold text-sm shadow-xl shadow-cyan-600/20 cursor-pointer transition-all"
+            >
+              <Globe2 className="w-4 h-4" />
+              <span>Launch Live Biosurveillance Radar</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* ── BHARAT SOCIAL IMPACT & AFFORDABILITY ───────────────── */}
       <section id="impact" className="py-16 sm:py-24 px-4 sm:px-8 bg-[#030914] border-b border-white/5">
         <div className="max-w-7xl mx-auto space-y-12">
@@ -520,6 +634,12 @@ export function LandingPage({ onEnterPortal, onOpenAuthModal }: LandingPageProps
             >
               Evaluation Dossier
             </button>
+            <button
+              onClick={() => setShowBiosurveillanceModal(true)}
+              className="text-cyan-400 hover:text-cyan-300 font-semibold cursor-pointer"
+            >
+              Biosurveillance Radar
+            </button>
             <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
             <a href="#device" className="hover:text-white transition-colors">Hardware Architecture</a>
             <a href="#accessibility" className="hover:text-white transition-colors">Assistive Tech</a>
@@ -536,6 +656,38 @@ export function LandingPage({ onEnterPortal, onOpenAuthModal }: LandingPageProps
         isOpen={showJudgeModal}
         onClose={() => setShowJudgeModal(false)}
       />
+
+      {/* Planetary Biosurveillance Radar Modal */}
+      {showBiosurveillanceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-6xl max-h-[92vh] flex flex-col rounded-3xl bg-[#091322] border border-cyan-500/40 shadow-2xl overflow-hidden text-slate-100 font-body">
+            <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-slate-900/90 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400">
+                  <Globe2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-display font-bold text-white">
+                    Planetary Biosurveillance &amp; Epidemic Radar
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Live syndromic surveillance, outbreak intelligence, and multi-source clinical feeds
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowBiosurveillanceModal(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+              <GlobalMedicalNews />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
