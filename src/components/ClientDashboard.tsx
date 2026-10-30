@@ -46,7 +46,9 @@ import {
   History,
   Clock,
   Trash2,
+  Cpu,
 } from 'lucide-react';
+import { DeviceManagement } from '@/components/DeviceManagement';
 
 interface ClientDashboardProps {
   patient: PatientProfile;
@@ -56,8 +58,8 @@ interface ClientDashboardProps {
 export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardProps) {
   const { user, logOut, updateCitizenAadhaarAndPhone } = useAuth();
 
-  // Page 1 to 5 state
-  const [currentPage, setCurrentPage] = useState<1 | 2 | 3 | 4 | 5>(1);
+  // Page 1 to 6 state
+  const [currentPage, setCurrentPage] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
 
   // Popup Modal for Physical Card Ad on Login
   const [showAdPopup, setShowAdPopup] = useState(false);
@@ -605,6 +607,7 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
 
   const navItems = [
     { id: 1, label: 'My Health Records', icon: <Activity className="w-5 h-5" /> },
+    { id: 6, label: 'CareLink Device', icon: <Cpu className="w-5 h-5 text-teal-500" /> },
     { id: 2, label: 'Emergency Card', icon: <QrCode className="w-5 h-5" /> },
     { id: 3, label: 'Health News', icon: <Globe2 className="w-5 h-5" /> },
     { id: 4, label: 'My Profile', icon: <User className="w-5 h-5" /> },
@@ -627,7 +630,7 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
             return (
               <button
                 key={item.id}
-                onClick={() => setCurrentPage(item.id as 1 | 2 | 3 | 4 | 5)}
+                onClick={() => setCurrentPage(item.id as 1 | 2 | 3 | 4 | 5 | 6)}
                 className={`ms-nav-btn press-scale shrink-0 ${
                   isActive ? 'active' : item.isPromo ? 'promo' : 'inactive'
                 }`}
@@ -2909,6 +2912,13 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
         </div>
       )}
 
+      {/* ── PAGE 6: CARELINK ASSIST HARDWARE MANAGEMENT ──────────────── */}
+      {currentPage === 6 && (
+        <div className="w-full space-y-6 animate-fadeIn">
+          <DeviceManagement patientId={patient.id} patientName={patient.fullName} />
+        </div>
+      )}
+
       <nav aria-label="Mobile Navigation" className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-t border-[var(--color-border)] shadow-xl bottom-nav-safe px-1.5 py-1.5 flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = currentPage === item.id;
@@ -2916,10 +2926,10 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
             <button
               key={item.id}
               onClick={() => {
-                setCurrentPage(item.id as 1 | 2 | 3 | 4 | 5);
+                setCurrentPage(item.id as 1 | 2 | 3 | 4 | 5 | 6);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1 rounded-xl transition-all min-w-[56px] min-h-[44px] cursor-pointer press-scale ${
+              className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1 rounded-xl transition-all min-w-[50px] min-h-[44px] cursor-pointer press-scale ${
                 isActive
                   ? 'text-[var(--clr-coral)] font-bold'
                   : item.isPromo
@@ -2931,7 +2941,7 @@ export function ClientDashboard({ patient, onUpdatePatient }: ClientDashboardPro
                 {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-4 h-4' })}
               </div>
               <span className="text-[10px] font-display font-semibold leading-tight text-center truncate max-w-[62px]">
-                {item.id === 1 ? 'Records' : item.id === 2 ? 'Emergency' : item.id === 3 ? 'News' : item.id === 4 ? 'Profile' : 'Card'}
+                {item.id === 1 ? 'Records' : item.id === 6 ? 'Device' : item.id === 2 ? 'Emergency' : item.id === 3 ? 'News' : item.id === 4 ? 'Profile' : 'Card'}
               </span>
             </button>
           );

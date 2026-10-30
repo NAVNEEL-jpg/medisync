@@ -1,19 +1,90 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User profile and roles
+    
+    // Helper functions for Role-Based Access Control (RBAC)
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isClinician() {
+      return isAuthenticated() && 
+        (request.auth.token.role == 'DOCTOR' || request.auth.token.role == 'CAMP_WORKER');
+    }
+
+    // 1. User Profiles & RBAC
     match /users/{userId} {
-      allow read, write: if request.auth != null;
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
     }
-    // Emergency Medical Profiles (Read allowed for emergency break-glass triage)
+
+    // 2. Patient Health Vaults (ABDM FHIR R4 Compliant)
     match /patients/{patientId} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      // Emergency Break-Glass reads allowed with logged triage tokens
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (request.auth.uid == patientId || isClinician());
+      allow delete: if false; // Medical history cannot be silently deleted
     }
-    // Access audit logging
+
+    // 3. CareLink Assist IoT Hardware
+    match /devices/{deviceId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && resource.data.patientId == request.auth.uid;
+    }
+
+    // 4. Device Telemetry Streams (MAX30102 & MPU6050)
+    match /deviceReadings/{readingId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated();
+    }
+
+    // 5. Emergency Events & SOS Incident Logs
+    match /emergencyEvents/{eventId} {
+      allow create: if isAuthenticated() || true; // Hardware fallback allowed
+      allow read: if isAuthenticated();
+      allow update: if isAuthenticated(); // For caregiver/EMT acknowledgement
+    }
+
+    // 6. Caregiver Profiles & Delegation Relationships
+    match /caregivers/{caregiverId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /caregiverRelationships/{relId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+        (resource == null || resource.data.patientId == request.auth.uid || request.resource.data.patientId == request.auth.uid);
+    }
+
+    // 7. Accessibility Preferences
+    match /accessibilityPreferences/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // 8. Medication Schedules & Adherence
+    match /medicationSchedules/{scheduleId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+        (request.resource.data.patientId == request.auth.uid || isClinician());
+    }
+
+    // 9. Tamper-evident Audit Logs
+    match /auditLogs/{logId} {
+      allow create: if true; // Any verified access triggers audit log
+      allow read: if isAuthenticated();
+      allow update, delete: if false; // Append-only audit trail
+    }
+
+    // Legacy compatibility for audit_logs
     match /audit_logs/{logId} {
       allow create: if true;
-      allow read: if request.auth != null;
+      allow read: if isAuthenticated();
+      allow update, delete: if false;
     }
   }
 }

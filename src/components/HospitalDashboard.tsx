@@ -1341,6 +1341,53 @@ export function HospitalDashboard({ initialPatient = INITIAL_PATIENTS[0] }: Hosp
                             )}
                           </div>
                         </div>
+
+                        {/* CareLink Assist IoT Live Stream & Incident History */}
+                        <div className="p-3 rounded-xl bg-teal-50/60 border border-teal-200/70 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-display font-bold text-teal-950 uppercase tracking-wider flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                              CareLink Assist IoT Stream (CL-ESP32-9081)
+                            </span>
+                            <span className="text-[10px] font-mono text-teal-800 font-bold bg-teal-100 px-2 py-0.5 rounded">
+                              Online · 84% Battery
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 text-xs font-mono">
+                            <div className="p-2 rounded-lg bg-white border border-teal-100 text-center">
+                              <span className="text-slate-500 text-[10px] block">Live Pulse:</span>
+                              <span className="font-bold text-slate-900 text-sm">74 bpm</span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-white border border-teal-100 text-center">
+                              <span className="text-slate-500 text-[10px] block">SpO2 (MAX30102):</span>
+                              <span className="font-bold text-emerald-700 text-sm">98%</span>
+                            </div>
+                            <div className="p-2 rounded-lg bg-white border border-teal-100 text-center">
+                              <span className="text-slate-500 text-[10px] block">Motion IMU:</span>
+                              <span className="font-bold text-slate-900 text-sm">1.02g (Stable)</span>
+                            </div>
+                          </div>
+
+                          {/* Emergency / Fall Incidents */}
+                          <div className="pt-1.5 border-t border-teal-200/50 space-y-1">
+                            <span className="text-[10px] font-mono text-slate-600 font-bold uppercase">Recent Hardware Incidents:</span>
+                            <div className="p-2 rounded-lg bg-white border border-amber-200 text-[11px] text-slate-700 space-y-0.5">
+                              <div className="flex items-center justify-between font-bold text-amber-900">
+                                <span>⚠️ Suspected Fall Event (2.65g vector)</span>
+                                <span className="text-[10px] text-slate-500">Today 08:35 AM</span>
+                              </div>
+                              <p className="text-[10px] text-slate-600">
+                                Acknowledged by Ananya Sharma (Caregiver). Patient confirmed slip near bedside, no acute trauma reported.
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* AI Medical Summary Disclaimer Notice */}
+                          <div className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-[10px] text-slate-600 leading-normal">
+                            <strong className="text-slate-800">Clinical Protocol:</strong> Sensor telemetry and AI summaries are auxiliary decision-support signals. Physical examination remains standard of care for trauma admission.
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </Card>

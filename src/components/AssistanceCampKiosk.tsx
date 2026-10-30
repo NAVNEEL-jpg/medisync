@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { PatientProfile } from '@/lib/types';
+import { OfflineSyncManager, addToOfflineQueue } from '@/components/OfflineSyncManager';
 import {
   HeartHandshake,
   UserPlus,
@@ -108,34 +109,61 @@ export function AssistanceCampKiosk({ onPatientEnrolled }: AssistanceCampKioskPr
         setSuccessPatient(data.patient);
         setRegisteredList((prev) => [data.patient, ...prev]);
         onPatientEnrolled(data.patient);
-
-        // Reset form
-        setFormData({
-          fullName: '',
-          aadhaarNumber: '',
-          mobileNumber: '',
-          dob: '',
-          gender: 'Female',
-          bloodGroup: 'B+',
-          address: '',
-          city: '',
-          state: 'Rajasthan',
-          existingConditions: '',
-          allergies: '',
-          emergencyContactName: '',
-          emergencyContactPhone: '',
-          emergencyRelationship: 'Son',
-          bloodPressure: '120/80 mmHg',
-          heartRate: '72',
-        });
+      } else {
+        throw new Error(data.error || 'Server rejected registration');
       }
     } catch (e) {
-      console.error(e);
+      console.warn('Network offline or failed, queuing into local offline cache:', e);
+      // Generate immediate local profile for offline village card printing
+      const localId = `MS-CAMP-${Date.now().toString(36).toUpperCase()}`;
+      const localPatient: PatientProfile = {
+        id: localId,
+        ...campData,
+        accessLogs: [],
+        lastProfileUpdate: new Date().toISOString(),
+        nextReviewDueDate: new Date(Date.now() + 1000 * 3600 * 24 * 120).toISOString(),
+      };
+
+      addToOfflineQueue({
+        action: 'CAMP_REGISTRATION',
+        endpoint: '/api/patients/update',
+        payload: {
+          action: 'REGISTER_CAMP_PATIENT',
+          campData,
+        },
+      });
+
+      setSuccessPatient(localPatient);
+      setRegisteredList((prev) => [localPatient, ...prev]);
+      onPatientEnrolled(localPatient);
     }
+
+    // Reset form
+    setFormData({
+      fullName: '',
+      aadhaarNumber: '',
+      mobileNumber: '',
+      dob: '',
+      gender: 'Female',
+      bloodGroup: 'B+',
+      address: '',
+      city: '',
+      state: 'Rajasthan',
+      existingConditions: '',
+      allergies: '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+      emergencyRelationship: 'Son',
+      bloodPressure: '120/80 mmHg',
+      heartRate: '72',
+    });
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-200">
+      {/* Offline Synchronization Bar */}
+      <OfflineSyncManager />
+
       {/* Camp Header Banner */}
       <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-slate-900 text-white rounded-2xl border-2 border-emerald-600 p-6 sm:p-8 shadow-xl">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

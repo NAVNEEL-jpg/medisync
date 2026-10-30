@@ -29,7 +29,7 @@ interface MediSyncLogoProps {
 export function MediSyncLogo({
   size = 40,
   showWordmark = true,
-  subtitle = null,
+  subtitle = 'Technology That Cares. Healthcare That Reaches Everyone.',
   subtitleClass = 'text-[10px] text-[var(--color-foreground-muted)] font-medium',
   wordmarkClass = 'font-display font-bold text-[16px] tracking-tight text-[var(--color-foreground)]',
   className = '',
@@ -38,12 +38,12 @@ export function MediSyncLogo({
     <div className={`flex items-center gap-3 ${className}`}>
       {/* Logo icon — the uploaded MediSync logo image */}
       <div
-        className="rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm"
+        className="rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm border border-teal-500/20"
         style={{ width: size, height: size }}
       >
         <Image
           src="/medisync-logo.jpg"
-          alt="MediSync Logo"
+          alt="MediSync CareLink Logo"
           width={size}
           height={size}
           className="object-cover w-full h-full"
@@ -53,9 +53,14 @@ export function MediSyncLogo({
 
       {showWordmark && (
         <div>
-          <span className={wordmarkClass}>MediSync</span>
+          <div className="flex items-center gap-1.5">
+            <span className={wordmarkClass}>MediSync</span>
+            <span className="text-[12px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-teal-500/15 text-teal-600 border border-teal-500/20">
+              CareLink
+            </span>
+          </div>
           {subtitle && (
-            <p className={`${subtitleClass} block leading-none mt-0.5`}>{subtitle}</p>
+            <p className={`${subtitleClass} block leading-none mt-1`}>{subtitle}</p>
           )}
         </div>
       )}

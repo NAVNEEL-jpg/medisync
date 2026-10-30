@@ -141,6 +141,9 @@ export interface PatientProfile {
   isRegisteredAtOfflineCamp: boolean;
   registeredCampLocation?: string;
   accessLogs: AccessAuditLog[];
+  activeDeviceId?: string;
+  linkedCaregivers?: CaregiverRelationship[];
+  accessibilityPrefs?: AccessibilityPreferences;
 }
 
 export interface DiagnosticRecord {
@@ -198,3 +201,117 @@ export interface OutbreakMetric {
   badgeType?: 'danger' | 'warning' | 'info';
   subtitle: string;
 }
+
+// ==================================================
+// MEDISYNC CARELINK EXTENSIONS
+// ==================================================
+
+export type DeviceStatus = 'ONLINE' | 'OFFLINE' | 'EMERGENCY_SOS' | 'SUSPECTED_FALL';
+
+export interface CareLinkDevice {
+  id: string; // e.g. 'CL-ESP32-9081'
+  patientId: string;
+  deviceModel: string; // 'CareLink Assist V1 (ESP32-WROOM-32)'
+  macAddress: string;
+  firmwareVersion: string;
+  batteryLevel: number; // 0-100%
+  isCharging?: boolean;
+  status: DeviceStatus;
+  lastHeartbeat: string;
+  registeredAt: string;
+  pairedBy: string;
+  hardwareSpecs: {
+    mcu: string;
+    pulseOximeter: string;
+    motionSensor: string;
+    display: string;
+    hasPhysicalSos: boolean;
+    hasBuzzer: boolean;
+  };
+}
+
+export interface DeviceTelemetry {
+  id: string;
+  deviceId: string;
+  patientId: string;
+  timestamp: string;
+  heartRate: number; // bpm (MAX30102)
+  spO2: number; // % (MAX30102)
+  motionMagnitude: number; // g-force vector from MPU6050
+  fallSuspected: boolean; // Flagged when motion vector exceeds fall threshold
+  batteryLevel: number;
+  status: DeviceStatus;
+}
+
+export type EmergencyEventType = 'MANUAL_SOS' | 'SUSPECTED_FALL' | 'CRITICAL_VITALS' | 'DEVICE_DISCONNECT' | 'MISSED_CHECK_IN';
+
+export interface EmergencyEvent {
+  id: string;
+  patientId: string;
+  patientName: string;
+  deviceId?: string;
+  eventType: EmergencyEventType;
+  severity: 'CRITICAL' | 'HIGH' | 'MODERATE';
+  timestamp: string;
+  status: 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED';
+  vitalsSnapshot?: {
+    heartRate?: number;
+    spO2?: number;
+    bloodPressure?: string;
+  };
+  location?: {
+    label: string;
+    lat?: number;
+    lng?: number;
+  };
+  notifiedContacts: {
+    name: string;
+    phone: string;
+    role: string;
+    delivered: boolean;
+  }[];
+  acknowledgedBy?: string;
+  resolvedAt?: string;
+  notes?: string;
+}
+
+export interface CaregiverProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  relationship: string;
+  linkedPatientIds: string[];
+  createdAt: string;
+}
+
+export interface CaregiverRelationship {
+  id: string;
+  caregiverId: string;
+  caregiverName: string;
+  caregiverPhone: string;
+  relationship: string;
+  permissions: Array<'VIEW_VITALS' | 'RECEIVE_SOS' | 'VIEW_MEDICATIONS' | 'FULL_RECORDS'>;
+  status: 'ACTIVE' | 'PENDING' | 'REVOKED';
+  grantedAt: string;
+}
+
+export interface AccessibilityPreferences {
+  highContrast: boolean;
+  fontSizeScale: 'normal' | 'large' | 'extra-large';
+  ttsEnabled: boolean;
+  voiceNavEnabled: boolean;
+  language: 'en' | 'hi' | 'bn';
+}
+
+export interface OfflineSyncQueueItem {
+  id: string;
+  action: 'ENROLL_PATIENT' | 'RECORD_VITALS' | 'SOS_TRIGGER' | 'CAMP_REGISTRATION';
+  endpoint: string;
+  payload: Record<string, unknown>;
+  timestamp: string;
+  attempts: number;
+  status: 'PENDING' | 'FAILED' | 'SYNCED';
+  lastError?: string;
+}
+

@@ -316,8 +316,8 @@ function EmergencyScanContent() {
           </Link>
           <MediSyncLogo
             size={30}
-            subtitle="Emergency Medical Vault"
-            subtitleClass="text-[10px] text-slate-400 font-medium"
+            subtitle="CareLink Emergency Triage Vault"
+            subtitleClass="text-[10px] text-teal-400 font-medium"
             wordmarkClass="font-bold text-white text-base tracking-tight"
           />
         </div>

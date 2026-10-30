@@ -12,7 +12,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-export type UserRole = 'PATIENT' | 'DOCTOR' | 'CAMP_WORKER';
+export type UserRole = 'PATIENT' | 'DOCTOR' | 'CAMP_WORKER' | 'CAREGIVER';
 
 export interface AppUser {
   uid: string;
@@ -103,6 +103,14 @@ const DEMO_USERS: Record<UserRole, AppUser> = {
     licenseNumber: 'CAMP-ID-9941',
     phoneNumber: '+91 97841 55210',
     orgType: 'Rural Assistance Camp',
+    authProvider: 'demo',
+  },
+  CAREGIVER: {
+    uid: 'demo-cg-01',
+    email: 'ananya.sharma@carelink.in',
+    displayName: 'Ananya Sharma (Family Caregiver)',
+    role: 'CAREGIVER',
+    phoneNumber: '+91 98765 11223',
     authProvider: 'demo',
   },
 };

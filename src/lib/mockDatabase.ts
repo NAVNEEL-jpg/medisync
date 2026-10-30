@@ -1,4 +1,11 @@
-import { PatientProfile } from './types';
+import {
+  PatientProfile,
+  CareLinkDevice,
+  DeviceTelemetry,
+  EmergencyEvent,
+  CaregiverProfile,
+  CaregiverRelationship,
+} from './types';
 
 export const INITIAL_PATIENTS: PatientProfile[] = [
   {
@@ -309,7 +316,7 @@ export function normalizeQuery(query: string): string {
 }
 
 // In-memory / storage functions
-let currentPatients: PatientProfile[] = [...INITIAL_PATIENTS];
+const currentPatients: PatientProfile[] = [...INITIAL_PATIENTS];
 
 export function getPatients(): PatientProfile[] {
   return currentPatients;
@@ -438,3 +445,334 @@ export function saveHospitalPatient(newPatient: PatientProfile): PatientProfile 
   }
   return newPatient;
 }
+
+// ==================================================
+// MEDISYNC CARELINK MOCK DATA & PERSISTENCE
+// ==================================================
+
+export const INITIAL_CARELINK_DEVICES: CareLinkDevice[] = [
+  {
+    id: 'CL-ESP32-9081',
+    patientId: 'MS-IND-89421',
+    deviceModel: 'CareLink Assist V1 (ESP32-WROOM-32)',
+    macAddress: '24:6F:28:B4:9A:12',
+    firmwareVersion: 'v2.4.1-swasthya',
+    batteryLevel: 84,
+    isCharging: false,
+    status: 'ONLINE',
+    lastHeartbeat: new Date(Date.now() - 45000).toISOString(),
+    registeredAt: '2026-09-12T10:00:00.000Z',
+    pairedBy: 'Ananya Sharma (Caregiver / Authorized Relative)',
+    hardwareSpecs: {
+      mcu: 'Espressif ESP32 dual-core 240MHz',
+      pulseOximeter: 'Maxim MAX30102 High-Sensitivity PPG',
+      motionSensor: 'InvenSense MPU6050 6-Axis IMU (Acc+Gyro)',
+      display: '0.96" SSD1306 OLED (128x64 px I2C)',
+      hasPhysicalSos: true,
+      hasBuzzer: true,
+    },
+  },
+  {
+    id: 'CL-ESP32-4412',
+    patientId: 'MS-IND-77192',
+    deviceModel: 'CareLink Assist V1 (ESP32-WROOM-32)',
+    macAddress: '30:AE:A4:07:33:91',
+    firmwareVersion: 'v2.4.1-swasthya',
+    batteryLevel: 92,
+    isCharging: true,
+    status: 'ONLINE',
+    lastHeartbeat: new Date(Date.now() - 90000).toISOString(),
+    registeredAt: '2026-10-01T08:30:00.000Z',
+    pairedBy: 'Dr. Vivek Mehra (ER Trauma Lead)',
+    hardwareSpecs: {
+      mcu: 'Espressif ESP32 dual-core 240MHz',
+      pulseOximeter: 'Maxim MAX30102 High-Sensitivity PPG',
+      motionSensor: 'InvenSense MPU6050 6-Axis IMU (Acc+Gyro)',
+      display: '0.96" SSD1306 OLED (128x64 px I2C)',
+      hasPhysicalSos: true,
+      hasBuzzer: true,
+    },
+  },
+];
+
+export const INITIAL_DEVICE_TELEMETRY: DeviceTelemetry[] = [
+  {
+    id: 'tel-10',
+    deviceId: 'CL-ESP32-9081',
+    patientId: 'MS-IND-89421',
+    timestamp: new Date(Date.now() - 30000).toISOString(),
+    heartRate: 74,
+    spO2: 98,
+    motionMagnitude: 1.02,
+    fallSuspected: false,
+    batteryLevel: 84,
+    status: 'ONLINE',
+  },
+  {
+    id: 'tel-09',
+    deviceId: 'CL-ESP32-9081',
+    patientId: 'MS-IND-89421',
+    timestamp: new Date(Date.now() - 90000).toISOString(),
+    heartRate: 76,
+    spO2: 98,
+    motionMagnitude: 0.99,
+    fallSuspected: false,
+    batteryLevel: 84,
+    status: 'ONLINE',
+  },
+  {
+    id: 'tel-08',
+    deviceId: 'CL-ESP32-9081',
+    patientId: 'MS-IND-89421',
+    timestamp: new Date(Date.now() - 150000).toISOString(),
+    heartRate: 78,
+    spO2: 97,
+    motionMagnitude: 1.05,
+    fallSuspected: false,
+    batteryLevel: 85,
+    status: 'ONLINE',
+  },
+  {
+    id: 'tel-07',
+    deviceId: 'CL-ESP32-9081',
+    patientId: 'MS-IND-89421',
+    timestamp: new Date(Date.now() - 210000).toISOString(),
+    heartRate: 75,
+    spO2: 98,
+    motionMagnitude: 0.98,
+    fallSuspected: false,
+    batteryLevel: 85,
+    status: 'ONLINE',
+  },
+  {
+    id: 'tel-06',
+    deviceId: 'CL-ESP32-9081',
+    patientId: 'MS-IND-89421',
+    timestamp: new Date(Date.now() - 270000).toISOString(),
+    heartRate: 79,
+    spO2: 97,
+    motionMagnitude: 1.01,
+    fallSuspected: false,
+    batteryLevel: 85,
+    status: 'ONLINE',
+  },
+  {
+    id: 'tel-05',
+    deviceId: 'CL-ESP32-9081',
+    patientId: 'MS-IND-89421',
+    timestamp: new Date(Date.now() - 330000).toISOString(),
+    heartRate: 73,
+    spO2: 98,
+    motionMagnitude: 0.97,
+    fallSuspected: false,
+    batteryLevel: 86,
+    status: 'ONLINE',
+  },
+];
+
+export const INITIAL_EMERGENCY_EVENTS: EmergencyEvent[] = [
+  {
+    id: 'EVT-FALL-2026-881',
+    patientId: 'MS-IND-89421',
+    patientName: 'Rajesh Kumar Sharma',
+    deviceId: 'CL-ESP32-9081',
+    eventType: 'SUSPECTED_FALL',
+    severity: 'HIGH',
+    timestamp: new Date(Date.now() - 3600000 * 3).toISOString(), // 3 hours ago
+    status: 'ACKNOWLEDGED',
+    vitalsSnapshot: {
+      heartRate: 94,
+      spO2: 96,
+      bloodPressure: '136/84 mmHg',
+    },
+    location: {
+      label: 'Home — Living Area (Sector 15, Jaipur)',
+      lat: 26.9124,
+      lng: 75.7873,
+    },
+    notifiedContacts: [
+      {
+        name: 'Ananya Sharma (Daughter / Caregiver)',
+        phone: '+91 98765 11223',
+        role: 'PRIMARY_CAREGIVER',
+        delivered: true,
+      },
+      {
+        name: 'Dr. Vivek Mehra (SMS Trauma Lead)',
+        phone: '+91 98290 12345',
+        role: 'CONSULTING_DOCTOR',
+        delivered: true,
+      },
+    ],
+    acknowledgedBy: 'Ananya Sharma (Caregiver)',
+    notes: 'Suspected impact detected (2.65g spike followed by 45s immobility). Caregiver called patient; patient confirmed slip near bedside, uninjured, resting.',
+  },
+  {
+    id: 'EVT-SOS-2026-904',
+    patientId: 'MS-IND-89421',
+    patientName: 'Rajesh Kumar Sharma',
+    deviceId: 'CL-ESP32-9081',
+    eventType: 'MANUAL_SOS',
+    severity: 'CRITICAL',
+    timestamp: new Date(Date.now() - 3600000 * 26).toISOString(), // Yesterday
+    status: 'RESOLVED',
+    vitalsSnapshot: {
+      heartRate: 88,
+      spO2: 97,
+      bloodPressure: '138/86 mmHg',
+    },
+    location: {
+      label: 'Near SMS Hospital Campus, Jaipur',
+      lat: 26.892,
+      lng: 75.821,
+    },
+    notifiedContacts: [
+      {
+        name: 'Ananya Sharma',
+        phone: '+91 98765 11223',
+        role: 'PRIMARY_CAREGIVER',
+        delivered: true,
+      },
+      {
+        name: 'SMS Emergency Triage',
+        phone: '108',
+        role: 'EMERGENCY_SERVICES',
+        delivered: true,
+      },
+    ],
+    acknowledgedBy: 'Paramedic EMT #4, SMS Ambulance',
+    resolvedAt: new Date(Date.now() - 3600000 * 25).toISOString(),
+    notes: 'Physical SOS button pressed on device. Patient felt sudden dizziness while walking. Responded within 4 minutes, vitals stabilized.',
+  },
+];
+
+export const INITIAL_CAREGIVERS: CaregiverProfile[] = [
+  {
+    id: 'CG-8821',
+    fullName: 'Ananya Sharma',
+    email: 'ananya.sharma@carelink.in',
+    phone: '+91 98765 11223',
+    relationship: 'Daughter / Family Caregiver',
+    linkedPatientIds: ['MS-IND-89421'],
+    createdAt: '2026-08-10T09:00:00.000Z',
+  },
+];
+
+// In-memory collections with localStorage caching
+const currentDevices: CareLinkDevice[] = [...INITIAL_CARELINK_DEVICES];
+const currentTelemetry: DeviceTelemetry[] = [...INITIAL_DEVICE_TELEMETRY];
+const currentEmergencyEvents: EmergencyEvent[] = [...INITIAL_EMERGENCY_EVENTS];
+const currentCaregivers: CaregiverProfile[] = [...INITIAL_CAREGIVERS];
+
+export function getCareLinkDevices(): CareLinkDevice[] {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('carelink_devices');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Could not read carelink_devices from storage:', e);
+    }
+  }
+  return currentDevices;
+}
+
+export function getCareLinkDeviceForPatient(patientId: string): CareLinkDevice | undefined {
+  const devices = getCareLinkDevices();
+  return devices.find((d) => d.patientId.replace('#', '') === patientId.replace('#', ''));
+}
+
+export function saveCareLinkDevice(device: CareLinkDevice): CareLinkDevice {
+  const idx = currentDevices.findIndex((d) => d.id === device.id);
+  if (idx !== -1) {
+    currentDevices[idx] = device;
+  } else {
+    currentDevices.unshift(device);
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('carelink_devices', JSON.stringify(currentDevices));
+    } catch (e) {
+      console.warn('Could not persist device:', e);
+    }
+  }
+  return device;
+}
+
+export function getDeviceTelemetry(deviceId?: string): DeviceTelemetry[] {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('carelink_telemetry');
+      if (saved) {
+        const parsed: DeviceTelemetry[] = JSON.parse(saved);
+        return deviceId ? parsed.filter((t) => t.deviceId === deviceId) : parsed;
+      }
+    } catch (e) {
+      console.warn('Could not read telemetry from storage:', e);
+    }
+  }
+  return deviceId ? currentTelemetry.filter((t) => t.deviceId === deviceId) : currentTelemetry;
+}
+
+export function recordDeviceTelemetry(item: DeviceTelemetry): DeviceTelemetry {
+  currentTelemetry.unshift(item);
+  if (currentTelemetry.length > 50) currentTelemetry.pop();
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('carelink_telemetry', JSON.stringify(currentTelemetry));
+    } catch (e) {
+      console.warn('Could not persist telemetry:', e);
+    }
+  }
+  return item;
+}
+
+export function getEmergencyEvents(patientId?: string): EmergencyEvent[] {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('carelink_emergency_events');
+      if (saved) {
+        const parsed: EmergencyEvent[] = JSON.parse(saved);
+        return patientId ? parsed.filter((e) => e.patientId.replace('#', '') === patientId.replace('#', '')) : parsed;
+      }
+    } catch (e) {
+      console.warn('Could not read emergency events from storage:', e);
+    }
+  }
+  return patientId ? currentEmergencyEvents.filter((e) => e.patientId.replace('#', '') === patientId.replace('#', '')) : currentEmergencyEvents;
+}
+
+export function recordEmergencyEvent(event: EmergencyEvent): EmergencyEvent {
+  currentEmergencyEvents.unshift(event);
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('carelink_emergency_events', JSON.stringify(currentEmergencyEvents));
+    } catch (e) {
+      console.warn('Could not persist emergency event:', e);
+    }
+  }
+  return event;
+}
+
+export function acknowledgeEmergencyEvent(eventId: string, acknowledgedBy: string, notes?: string): EmergencyEvent | null {
+  const events = getEmergencyEvents();
+  const event = events.find((e) => e.id === eventId);
+  if (!event) return null;
+
+  event.status = 'ACKNOWLEDGED';
+  event.acknowledgedBy = acknowledgedBy;
+  if (notes) event.notes = notes;
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('carelink_emergency_events', JSON.stringify(events));
+    } catch (e) {
+      console.warn('Could not update emergency event:', e);
+    }
+  }
+  return event;
+}
+
+export function getCaregiverProfiles(): CaregiverProfile[] {
+  return currentCaregivers;
+}
+

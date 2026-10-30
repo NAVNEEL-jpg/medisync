@@ -780,3 +780,55 @@ a, button, [role="button"], input, select, textarea {
   .vital-card:hover { transform: none; }
   .press-scale:active { transform: none; }
 }
+
+/* ============================================================
+   MEDISYNC CARELINK ASSISTIVE MODE RULES
+   Category 2: Accessible Healthcare & Assistive Tech (Swasthya)
+   ============================================================ */
+
+html.high-contrast {
+  filter: contrast(115%);
+}
+
+html.high-contrast body {
+  background: #000000 !important;
+  color: #FEF08A !important; /* High-contrast bright yellow */
+}
+
+html.high-contrast .bg-\[var\(--color-surface\)\],
+html.high-contrast [style*="background: var(--color-surface)"],
+html.high-contrast .bg-slate-900,
+html.high-contrast .bg-white {
+  background: #000000 !important;
+  border-color: #FACC15 !important;
+  color: #FEF08A !important;
+}
+
+html.high-contrast p,
+html.high-contrast span,
+html.high-contrast h1,
+html.high-contrast h2,
+html.high-contrast h3,
+html.high-contrast h4,
+html.high-contrast label {
+  color: #FEF08A !important;
+}
+
+html.high-contrast button {
+  border: 2px solid #FACC15 !important;
+}
+
+html.font-scale-large {
+  font-size: 118%;
+}
+
+html.font-scale-xl {
+  font-size: 135%;
+}
+
+html.font-scale-large button,
+html.font-scale-xl button {
+  min-height: 48px;
+  min-width: 48px;
+}
+

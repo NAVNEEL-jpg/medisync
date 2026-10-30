@@ -1,33 +1,34 @@
 <div align="center">
 
-  <img src="public/medisync-logo.jpg" alt="MediSync Logo" width="120" style="border-radius: 20%; box-shadow: 0 10px 25px rgba(0,0,0,0.15);" />
+  <img src="public/medisync-logo.jpg" alt="MediSync CareLink Logo" width="120" style="border-radius: 20%; box-shadow: 0 10px 25px rgba(0,0,0,0.15);" />
 
-  # 🏥 MediSync
-  ### *The Next-Generation Emergency Health Vault & Clinical Intelligence Relay*
+  # 🏥 MediSync CareLink
+  ### *Technology That Cares. Healthcare That Reaches Everyone.*
+  #### **Design for Bharat Challenge 2026 — Category 2: Accessible Healthcare & Assistive Tech (Swasthya)**
 
   [![Next.js 16](https://img.shields.io/badge/Next.js-16.3.5-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
   [![React 19](https://img.shields.io/badge/React-19.2.8-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
   [![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini%203-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
   [![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%26%20Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+  [![ESP32 IoT](https://img.shields.io/badge/Hardware-ESP32%20%7C%20MAX30102%20%7C%20MPU6050-E7352C?style=for-the-badge)](firmware/esp32_carelink_main.ino)
   [![ABDM & HL7 FHIR](https://img.shields.io/badge/Standards-ABDM%20%7C%20HL7%20FHIR%20v4.3-10B981?style=for-the-badge)](https://abdm.gov.in/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
   <p align="center">
-    <b>Empowering first responders with zero-latency emergency medical triage, bridging citizens with AI-driven health management, and uniting hospitals through an interoperable national health grid.</b>
+    <b>An end-to-end assistive healthcare ecosystem uniting an affordable sub-₹1,800 ESP32 wearable device, an accessible ABDM-aligned digital health vault, and a consent-governed care network for elderly citizens, family caregivers, and rural frontline workers.</b>
   </p>
 
   <p align="center">
-    <a href="https://medisync-signal4.vercel.app"><b>🚀 Live Application Demo</b></a> •
     <a href="https://github.com/NAVNEEL-jpg/medisync"><b>💻 GitHub Repository</b></a> •
-    <a href="#-quick-links--judge-evaluation-fast-track"><b>Judge Evaluation Track</b></a> •
-    <a href="#-the-problem--the-golden-hour-crisis"><b>Problem Statement</b></a> •
-    <a href="#-interface-gallery--live-screenshots"><b>📸 Screenshots</b></a> •
-    <a href="#-key-features--capabilities"><b>Features</b></a>
+    <a href="#-quick-links--judge-evaluation-fast-track"><b>⚡ Judge Evaluation Track</b></a> •
+    <a href="docs/CARELINK_ARCHITECTURE.md"><b>🏛️ Architecture Guide</b></a> •
+    <a href="docs/DEVICE_INTEGRATION.md"><b>🔌 Hardware Guide</b></a> •
+    <a href="docs/API_DOCUMENTATION.md"><b>📡 API Reference</b></a>
   </p>
 
   <br/>
 
-  <img src="public/emergency_wallet_card_ad.jpg" alt="MediSync Emergency Card Banner" width="900" style="border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 12px 30px rgba(0,0,0,0.12);" />
+  <img src="public/emergency_wallet_card_ad.jpg" alt="MediSync CareLink Banner" width="900" style="border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 12px 30px rgba(0,0,0,0.12);" />
 
 </div>
 
@@ -35,19 +36,21 @@
 
 ## ⚡ Quick Links & Judge Evaluation Fast-Track
 
-> **Welcome Hackathon Judges!** MediSync is fully pre-configured with interactive instant-login roles so you can test all patient, emergency physician, and hospital workflows in seconds without registering.
+> **Welcome Design for Bharat Challenge Judges!** MediSync CareLink is pre-configured with 4 instant-evaluation personas so you can test all patient, caregiver, doctor, and rural kiosk workflows in seconds without manual sign-up:
 
 | Persona | Test Email / ID | Default Role | Key Capabilities to Test |
 | :--- | :--- | :--- | :--- |
-| **Rajesh Kumar Sharma** *(Citizen / Patient)* | `rajesh.sharma@gmail.com` | `PATIENT` | Dynamic Emergency QR, Gemini AI Symptom Triage, Lab Tracker, Smart Card Order with Hospital Referral |
-| **Dr. Vivek Mehra** *(Trauma ER Lead)* | `dr.mehra@sms.hospital.in` | `DOCTOR` | Emergency Patient Search, Real-Time Triage Break-Glass, Manual Patient Enrollment & Document Ingestion, Unique ID/QR Generation, Enrolled Directory, Validated Hospital QR/Barcode Scanner, Lab Diagnostic Entry, 5% Partner Commission Terminal |
-| **Sunita Sharma** *(ASHA Camp Facilitator)* | `asha.sunita@health.rajasthan.gov.in` | `CAMP_WORKER` | Offline Assistance Camp Kiosk, Rapid Field Registration, Aadhaar-linked Vitals Ingestion |
+| **Rajesh Kumar Sharma** *(Elderly Citizen / Patient)* | `rajesh.sharma@gmail.com` | `PATIENT` | Assistive Mode (En/Hi/Bn), Revocable QR Triage Token, CareLink Device Pairing, Google Gemini AI Chat, Vitals Logs |
+| **Ananya Sharma** *(Family Caregiver)* | `ananya.sharma@carelink.in` | `CAREGIVER` | Scoped Patient Consent, Real-Time Telemetry Feeds, Suspected Fall Alerts, Medication Adherence, Emergency Dial Ring |
+| **Dr. Vivek Mehra** *(Trauma ER Lead)* | `dr.mehra@sms.hospital.in` | `DOCTOR` | Emergency Triage Break-Glass, IoT Live Telemetry Graphs, Suspected Fall Timeline, Source-Attributed AI Summaries |
+| **Sunita Sharma** *(ASHA Camp Facilitator)* | `asha.sunita@health.rajasthan.gov.in` | `CAMP_WORKER` | Offline-First Outreach Kiosk, IndexedDB Sync Queue, Local Laminated QR Card Generation |
 
 ### 🚀 10-Second Quick Start for Judges
-1. Open the deployed application (or `http://localhost:3000` locally).
-2. On the **Front Welcome Screen**, simply click either **"Quick Demo: Patient View"** or **"Quick Demo: Hospital View"**.
-3. Use the top navigation bar's **"Switch View"** button at any time to seamlessly toggle between the **Citizen Vault** and the **Hospital ER Terminal**.
-4. Click the floating **AI Health Companion** bot icon in the bottom corner to test real-time Google Gemini clinical reasoning.
+1. Open the application locally (`npm run dev` at `http://localhost:3000`).
+2. Explore the **Public Showcase Landing Page** to inspect the 3D-styled CareLink device visual, problem statement, and social impact.
+3. Click the top banner button **"Open Evaluation Dossier"** for a complete breakdown of the 8 Design for Bharat evaluation criteria.
+4. Use the role switcher in the header to effortlessly transition between **Patient**, **Caregiver**, **Doctor**, and **ASHA Kiosk** views.
+5. In the Patient View, click **"Assistive Mode"** to experience the WCAG AAA High-Contrast theme, font scaling, and trilingual Hindi/Bengali audio synthesis.
 
 ---
 
